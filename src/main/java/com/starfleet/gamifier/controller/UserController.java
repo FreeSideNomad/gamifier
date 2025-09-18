@@ -1,8 +1,13 @@
 package com.starfleet.gamifier.controller;
 
+import com.starfleet.gamifier.controller.dto.UserRequests.ImportResult;
+import com.starfleet.gamifier.controller.dto.UserRequests.MissionProgressResponse;
+import com.starfleet.gamifier.controller.dto.UserRequests.UpdateUserRequest;
+import com.starfleet.gamifier.controller.dto.UserRequests.UserDashboardResponse;
 import com.starfleet.gamifier.domain.User;
+import com.starfleet.gamifier.service.AuthenticationService;
 import com.starfleet.gamifier.service.UserService;
-import com.starfleet.gamifier.controller.dto.UserRequests.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,9 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import jakarta.validation.Valid;
-import java.util.List;
 
 /**
  * REST Controller for User management (Gamification Service)
@@ -24,23 +26,27 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final AuthenticationService authenticationService;
 
     @GetMapping("/me")
     public ResponseEntity<UserDashboardResponse> getCurrentUserDashboard() {
-        // TODO: Get current user from security context
-        String currentUserId = "current-user-id"; // Placeholder
+        String currentUserId = authenticationService.getCurrentUserId();
         UserDashboardResponse dashboard = userService.getUserDashboard(currentUserId);
         return ResponseEntity.ok(dashboard);
     }
 
     @GetMapping("/dashboard")
     public ResponseEntity<UserDashboardResponse> getUserDashboard(@RequestParam String userId) {
+        authenticationService.requireAdminAccess(authenticationService.getCurrentOrganizationId());
         UserDashboardResponse dashboard = userService.getUserDashboard(userId);
         return ResponseEntity.ok(dashboard);
     }
 
     @GetMapping("/{userId}")
     public ResponseEntity<User> getUser(@PathVariable String userId) {
+        if (!authenticationService.canAccessUser(userId)) {
+            throw new SecurityException("Access denied to user: " + userId);
+        }
         User user = userService.getUser(userId);
         return ResponseEntity.ok(user);
     }
@@ -62,6 +68,7 @@ public class UserController {
     public ResponseEntity<Page<User>> getAllUsers(
             @RequestParam String organizationId,
             Pageable pageable) {
+        authenticationService.requireAdminAccess(organizationId);
         Page<User> users = userService.getAllUsers(organizationId, pageable);
         return ResponseEntity.ok(users);
     }
@@ -70,25 +77,12 @@ public class UserController {
     public ResponseEntity<ImportResult> importUsers(
             @RequestParam("file") MultipartFile file,
             @RequestParam String organizationId) {
+        authenticationService.requireAdminAccess(organizationId);
         ImportResult result = userService.importUsersFromCsv(file, organizationId);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    @GetMapping("/leaderboard/monthly")
-    public ResponseEntity<List<LeaderboardEntry>> getMonthlyLeaderboard(
-            @RequestParam String organizationId,
-            @RequestParam(defaultValue = "10") int limit) {
-        List<LeaderboardEntry> leaderboard = userService.getMonthlyLeaderboard(organizationId, limit);
-        return ResponseEntity.ok(leaderboard);
-    }
-
-    @GetMapping("/leaderboard/all-time")
-    public ResponseEntity<List<LeaderboardEntry>> getAllTimeLeaderboard(
-            @RequestParam String organizationId,
-            @RequestParam(defaultValue = "10") int limit) {
-        List<LeaderboardEntry> leaderboard = userService.getAllTimeLeaderboard(organizationId, limit);
-        return ResponseEntity.ok(leaderboard);
-    }
+    // Leaderboard methods moved to LeaderboardController
 
     @GetMapping("/{userId}/missions/{missionId}")
     public ResponseEntity<MissionProgressResponse> getMissionProgress(

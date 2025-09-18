@@ -1,16 +1,14 @@
 package com.starfleet.gamifier.controller;
 
+import com.starfleet.gamifier.controller.dto.OrganizationRequests.*;
 import com.starfleet.gamifier.domain.Organization;
 import com.starfleet.gamifier.service.OrganizationService;
-import com.starfleet.gamifier.controller.dto.OrganizationRequests.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.util.List;
 
 /**

@@ -30,16 +30,14 @@ class OrganizationRepositoryTest {
     @Container
     static MongoDBContainer mongodb = new MongoDBContainer("mongo:7.0")
             .withExposedPorts(27017);
+    @Autowired
+    private OrganizationRepository organizationRepository;
+    private Organization testOrganization;
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.mongodb.uri", mongodb::getReplicaSetUrl);
     }
-
-    @Autowired
-    private OrganizationRepository organizationRepository;
-
-    private Organization testOrganization;
 
     @BeforeEach
     void setUp() {

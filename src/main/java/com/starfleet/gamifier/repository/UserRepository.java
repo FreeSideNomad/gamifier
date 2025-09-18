@@ -2,9 +2,9 @@ package com.starfleet.gamifier.repository;
 
 import com.starfleet.gamifier.domain.User;
 import com.starfleet.gamifier.domain.UserRole;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -36,4 +36,6 @@ public interface UserRepository extends MongoRepository<User, String> {
     List<User> findTop10ByOrganizationIdOrderByTotalPointsDesc(String organizationId);
 
     Page<User> findByOrganizationIdOrderByTotalPointsDesc(String organizationId, Pageable pageable);
+
+    long countByOrganizationIdAndTotalPointsGreaterThan(String organizationId, Integer totalPoints);
 }

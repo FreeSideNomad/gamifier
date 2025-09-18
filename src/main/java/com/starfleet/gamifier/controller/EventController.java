@@ -1,12 +1,16 @@
 package com.starfleet.gamifier.controller;
 
 import com.starfleet.gamifier.domain.Event;
+import com.starfleet.gamifier.domain.EventType;
 import com.starfleet.gamifier.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.util.List;
@@ -43,7 +47,7 @@ public class EventController {
             @RequestParam(required = false) String until,
             Pageable pageable) {
 
-        Event.EventType type = eventType != null ? Event.EventType.valueOf(eventType) : null;
+        EventType type = eventType != null ? EventType.valueOf(eventType) : null;
         Instant sinceTimestamp = since != null ? Instant.parse(since) : null;
         Instant untilTimestamp = until != null ? Instant.parse(until) : null;
 
@@ -80,9 +84,20 @@ public class EventController {
             this.monthEvents = monthEvents;
         }
 
-        public long getTotalEvents() { return totalEvents; }
-        public long getTodayEvents() { return todayEvents; }
-        public long getWeekEvents() { return weekEvents; }
-        public long getMonthEvents() { return monthEvents; }
+        public long getTotalEvents() {
+            return totalEvents;
+        }
+
+        public long getTodayEvents() {
+            return todayEvents;
+        }
+
+        public long getWeekEvents() {
+            return weekEvents;
+        }
+
+        public long getMonthEvents() {
+            return monthEvents;
+        }
     }
 }

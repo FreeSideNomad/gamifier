@@ -1,9 +1,10 @@
 package com.starfleet.gamifier.controller.dto;
 
-import lombok.Data;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
+import lombok.Data;
+
 import java.util.List;
 
 /**
@@ -26,6 +27,7 @@ public class UserRequests {
     }
 
     @Data
+    @Builder
     public static class UserDashboardResponse {
         private String userId;
         private String name;
@@ -42,6 +44,7 @@ public class UserRequests {
     }
 
     @Data
+    @Builder
     public static class MissionProgressSummary {
         private String missionId;
         private String missionName;
@@ -53,6 +56,7 @@ public class UserRequests {
     }
 
     @Data
+    @Builder
     public static class ActionTypeSummary {
         private String actionTypeId;
         private String name;
@@ -63,6 +67,7 @@ public class UserRequests {
     }
 
     @Data
+    @Builder
     public static class RecentEvent {
         private String eventType;
         private String title;
@@ -71,6 +76,7 @@ public class UserRequests {
     }
 
     @Data
+    @Builder
     public static class ImportResult {
         private Integer totalRecords;
         private Integer successfulImports;
@@ -79,6 +85,7 @@ public class UserRequests {
     }
 
     @Data
+    @Builder
     public static class LeaderboardEntry {
         private String userId;
         private String name;
@@ -91,6 +98,7 @@ public class UserRequests {
     }
 
     @Data
+    @Builder
     public static class MissionProgressResponse {
         private String missionId;
         private String missionName;
@@ -103,6 +111,7 @@ public class UserRequests {
     }
 
     @Data
+    @Builder
     public static class ActionProgress {
         private String actionTypeId;
         private String actionName;

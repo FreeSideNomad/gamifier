@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * Starfleet Gamifier Application
- *
+ * <p>
  * Unified application containing both Configuration Service (Knowledge Layer)
  * and Gamification Service for employee behavior incentivization.
  */

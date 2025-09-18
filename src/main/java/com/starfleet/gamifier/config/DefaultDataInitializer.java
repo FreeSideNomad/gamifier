@@ -1,9 +1,8 @@
 package com.starfleet.gamifier.config;
 
-import com.starfleet.gamifier.domain.CaptureMethod;
-import com.starfleet.gamifier.domain.Organization;
-import com.starfleet.gamifier.domain.ReporterType;
+import com.starfleet.gamifier.domain.*;
 import com.starfleet.gamifier.repository.OrganizationRepository;
+import com.starfleet.gamifier.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -25,6 +24,7 @@ import java.util.UUID;
 public class DefaultDataInitializer implements ApplicationRunner {
 
     private final OrganizationRepository organizationRepository;
+    private final UserRepository userRepository;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -38,6 +38,9 @@ public class DefaultDataInitializer implements ApplicationRunner {
 
         Organization organization = createDefaultOrganization();
         organizationRepository.save(organization);
+
+        // Create default development users
+        createDefaultUsers(organization.getId());
 
         log.info("Default Starfleet organization '{}' created with ID: {}",
                 organization.getName(), organization.getId());
@@ -340,5 +343,47 @@ public class DefaultDataInitializer implements ApplicationRunner {
                 .findFirst()
                 .map(Organization.ActionType::getId)
                 .orElseThrow(() -> new IllegalStateException("Action type not found: " + name));
+    }
+
+    private void createDefaultUsers(String organizationId) {
+        // Create development user that matches the AuthenticationService
+        User devUser = User.builder()
+                .id("dev-user-001")
+                .organizationId(organizationId)
+                .employeeId("NCC-1701")
+                .name("James T.")
+                .surname("Kirk")
+                .managerEmployeeId(null)
+                .role(UserRole.ADMIN)
+                .totalPoints(1500) // Lieutenant Commander level
+                .build();
+
+        userRepository.save(devUser);
+
+        // Create some additional test users
+        User testUser1 = User.builder()
+                .organizationId(organizationId)
+                .employeeId("NCC-1701-A")
+                .name("Spock")
+                .surname("of Vulcan")
+                .managerEmployeeId("NCC-1701")
+                .role(UserRole.USER)
+                .totalPoints(2200) // Commander level
+                .build();
+
+        User testUser2 = User.builder()
+                .organizationId(organizationId)
+                .employeeId("NCC-1701-B")
+                .name("Leonard H.")
+                .surname("McCoy")
+                .managerEmployeeId("NCC-1701")
+                .role(UserRole.USER)
+                .totalPoints(800) // Lieutenant level
+                .build();
+
+        userRepository.save(testUser1);
+        userRepository.save(testUser2);
+
+        log.info("Created {} default users for organization {}", 3, organizationId);
     }
 }

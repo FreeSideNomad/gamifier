@@ -1,15 +1,16 @@
 package com.starfleet.gamifier.domain;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -19,7 +20,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @Document(collection = "organizations")
 public class Organization {
 
@@ -51,13 +52,105 @@ public class Organization {
     @Builder.Default
     private List<RankConfiguration> rankConfigurations = List.of();
 
+    // Business methods for Organization
+    public void updateDetails(String name, String description) {
+        this.name = name;
+        this.description = description;
+        this.updatedAt = Instant.now();
+    }
+
+    public void activate() {
+        this.active = true;
+        this.updatedAt = Instant.now();
+    }
+
+    public void deactivate() {
+        this.active = false;
+        this.updatedAt = Instant.now();
+    }
+
+    public boolean isActive() {
+        return Boolean.TRUE.equals(this.active);
+    }
+
+    public Optional<MissionType> getMissionType(String missionId) {
+        return missionTypes.stream()
+                .filter(mt -> mt.getId().equals(missionId))
+                .findFirst();
+    }
+
+    public List<MissionType> getActiveMissionTypes() {
+        return missionTypes.stream()
+                .filter(MissionType::getActive)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public List<MissionType> getMissionTypesWithActionType(String actionTypeId) {
+        return missionTypes.stream()
+                .filter(MissionType::getActive)
+                .filter(mission -> mission.getRequiredActionTypeIds().contains(actionTypeId))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    // Query methods for collections
+
+    public Optional<ActionType> getActionType(String actionTypeId) {
+        return actionTypes.stream()
+                .filter(at -> at.getId().equals(actionTypeId))
+                .findFirst();
+    }
+
+    public Optional<ActionType> getActionTypeByName(String name) {
+        return actionTypes.stream()
+                .filter(at -> at.getName().equalsIgnoreCase(name))
+                .findFirst();
+    }
+
+    public List<ActionType> getActiveActionTypes() {
+        return actionTypes.stream()
+                .filter(ActionType::getActive)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public Optional<RankConfiguration> getRankConfiguration(String rankId) {
+        return rankConfigurations.stream()
+                .filter(rank -> rank.getId().equals(rankId))
+                .findFirst();
+    }
+
+    public List<RankConfiguration> getActiveRankConfigurations() {
+        return rankConfigurations.stream()
+                .filter(RankConfiguration::getActive)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public List<RankConfiguration> getActiveRankConfigurationsSorted() {
+        return rankConfigurations.stream()
+                .filter(RankConfiguration::getActive)
+                .sorted((r1, r2) -> Integer.compare(r1.getPointsThreshold(), r2.getPointsThreshold()))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public Optional<RankConfiguration> getEligibleRank(Integer userPoints) {
+        return rankConfigurations.stream()
+                .filter(rank -> rank.isEligibleForPoints(userPoints) && rank.getActive())
+                .max((r1, r2) -> Integer.compare(r1.getPointsThreshold(), r2.getPointsThreshold()));
+    }
+
+    public Optional<RankConfiguration> getNextRank(Integer currentPoints) {
+        return rankConfigurations.stream()
+                .filter(RankConfiguration::getActive)
+                .filter(rank -> rank.getPointsThreshold() > currentPoints)
+                .min((r1, r2) -> Integer.compare(r1.getPointsThreshold(), r2.getPointsThreshold()));
+    }
+
     /**
      * Embedded ActionType within Organization
      */
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    @Builder
+    @Builder(toBuilder = true)
     public static class ActionType {
         private String id;
         private String name;
@@ -103,7 +196,7 @@ public class Organization {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    @Builder
+    @Builder(toBuilder = true)
     public static class MissionType {
         private String id;
         private String name;
@@ -136,6 +229,10 @@ public class Organization {
         public boolean requiresActionType(String actionTypeId) {
             return requiredActionTypeIds != null && requiredActionTypeIds.contains(actionTypeId);
         }
+
+        public boolean getActive() {
+            return Boolean.TRUE.equals(this.active);
+        }
     }
 
     /**
@@ -144,7 +241,7 @@ public class Organization {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    @Builder
+    @Builder(toBuilder = true)
     public static class RankConfiguration {
         private String id;
         private String name;
@@ -175,26 +272,9 @@ public class Organization {
             }
             return this.pointsThreshold > other.pointsThreshold;
         }
-    }
 
-    // Business methods for Organization
-    public void updateDetails(String name, String description) {
-        this.name = name;
-        this.description = description;
-        this.updatedAt = Instant.now();
-    }
-
-    public void activate() {
-        this.active = true;
-        this.updatedAt = Instant.now();
-    }
-
-    public void deactivate() {
-        this.active = false;
-        this.updatedAt = Instant.now();
-    }
-
-    public boolean isActive() {
-        return Boolean.TRUE.equals(this.active);
+        public boolean getActive() {
+            return Boolean.TRUE.equals(this.active);
+        }
     }
 }

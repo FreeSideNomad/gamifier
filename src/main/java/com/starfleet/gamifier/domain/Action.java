@@ -1,12 +1,12 @@
 package com.starfleet.gamifier.domain;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -19,9 +19,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(collection = "action_captures")
-@CompoundIndex(def = "{'organizationId': 1, 'userId': 1, 'actionTypeId': 1, 'date': 1}", unique = true)
-public class ActionCapture {
+@Document(collection = "actions")
+@CompoundIndex(def = "{'organizationId': 1, 'userId': 1, 'actionTypeId': 1, 'actionDate': 1}", unique = true)
+public class Action {
 
     @Id
     private String id;
@@ -29,15 +29,15 @@ public class ActionCapture {
     private String organizationId;
     private String userId;
     private String actionTypeId;
-    private LocalDate date;
+    private LocalDate actionDate;
     private CaptureMethod captureMethod;
-    private ReporterType reporterType;
-    private String reporterId; // ID of the person who reported the action
+    private String reporterUserId; // ID of the person who reported the action
 
     @Builder.Default
-    private ActionStatus status = ActionStatus.PENDING;
+    private CaptureStatus status = CaptureStatus.PENDING_APPROVAL;
 
-    private String approvalNotes;
+    private String evidence;
+    private String notes;
     private String rejectionReason;
     private Instant approvedAt;
     private String approvedBy;
@@ -48,47 +48,34 @@ public class ActionCapture {
     @Builder.Default
     private Instant updatedAt = Instant.now();
 
-    /**
-     * Status of the action capture
-     */
-    public enum ActionStatus {
-        PENDING,    // Waiting for approval
-        APPROVED,   // Approved and points awarded
-        REJECTED    // Rejected, no points awarded
-    }
-
     // Business methods
-    public void approve(String approverId, String notes) {
-        this.status = ActionStatus.APPROVED;
+    public void approve(String approverId) {
+        this.status = CaptureStatus.APPROVED;
         this.approvedBy = approverId;
-        this.approvalNotes = notes;
         this.approvedAt = Instant.now();
         this.updatedAt = Instant.now();
     }
 
-    public void reject(String rejectionReason) {
-        this.status = ActionStatus.REJECTED;
+    public void reject(String approverId, String rejectionReason) {
+        this.status = CaptureStatus.REJECTED;
+        this.approvedBy = approverId;
         this.rejectionReason = rejectionReason;
         this.updatedAt = Instant.now();
     }
 
     public boolean isApproved() {
-        return ActionStatus.APPROVED.equals(this.status);
+        return CaptureStatus.APPROVED.equals(this.status);
     }
 
     public boolean isPending() {
-        return ActionStatus.PENDING.equals(this.status);
+        return CaptureStatus.PENDING_APPROVAL.equals(this.status);
     }
 
     public boolean isRejected() {
-        return ActionStatus.REJECTED.equals(this.status);
+        return CaptureStatus.REJECTED.equals(this.status);
     }
 
     public boolean wasImported() {
         return CaptureMethod.IMPORT.equals(this.captureMethod);
-    }
-
-    public boolean isSelfReported() {
-        return ReporterType.SELF.equals(this.reporterType);
     }
 }

@@ -1,8 +1,11 @@
 package com.starfleet.gamifier.controller;
 
-import com.starfleet.gamifier.domain.ActionCapture;
+import com.starfleet.gamifier.controller.dto.ActionRequests.CaptureActionRequest;
+import com.starfleet.gamifier.controller.dto.ActionRequests.ImportResult;
+import com.starfleet.gamifier.controller.dto.ActionRequests.RejectActionRequest;
+import com.starfleet.gamifier.domain.Action;
 import com.starfleet.gamifier.service.ActionService;
-import com.starfleet.gamifier.controller.dto.ActionRequests.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,9 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import jakarta.validation.Valid;
-import java.util.List;
 
 /**
  * REST Controller for Action management (Gamification Service)
@@ -26,26 +26,17 @@ public class ActionController {
     private final ActionService actionService;
 
     @PostMapping
-    public ResponseEntity<ActionCapture> captureAction(@Valid @RequestBody CaptureActionRequest request) {
-        ActionCapture actionCapture = actionService.captureAction(
-                request.getOrganizationId(),
-                request.getUserId(),
-                request.getActionTypeId(),
-                request.getDate(),
-                request.getReporterType(),
-                request.getReporterId(),
-                request.getEvidence()
-        );
-        return ResponseEntity.status(HttpStatus.CREATED).body(actionCapture);
+    public ResponseEntity<Action> captureAction(@Valid @RequestBody CaptureActionRequest request) {
+        Action action = actionService.captureAction(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(action);
     }
 
-    @GetMapping
-    public ResponseEntity<Page<ActionCapture>> getActionHistory(
-            @RequestParam String userId,
-            @RequestParam String organizationId,
+    @GetMapping("/history/{userId}")
+    public ResponseEntity<Page<Action>> getUserActionHistory(
+            @PathVariable String userId,
             Pageable pageable) {
-        Page<ActionCapture> actions = actionService.getActionHistory(userId, organizationId, pageable);
-        return ResponseEntity.ok(actions);
+        Page<Action> history = actionService.getUserActionHistory(userId, pageable);
+        return ResponseEntity.ok(history);
     }
 
     @PostMapping("/import")
@@ -56,42 +47,25 @@ public class ActionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    @GetMapping("/pending")
-    public ResponseEntity<List<ActionCapture>> getPendingApprovals(
-            @RequestParam String organizationId,
-            @RequestParam String managerId) {
-        List<ActionCapture> pendingActions = actionService.getPendingApprovals(organizationId, managerId);
-        return ResponseEntity.ok(pendingActions);
+    @GetMapping("/pending/{managerId}")
+    public ResponseEntity<Page<Action>> getPendingApprovals(
+            @PathVariable String managerId,
+            Pageable pageable) {
+        Page<Action> pending = actionService.getPendingApprovals(managerId, pageable);
+        return ResponseEntity.ok(pending);
     }
 
-    @PutMapping("/{actionId}/approve")
-    public ResponseEntity<ActionCapture> approveAction(
-            @PathVariable String actionId,
-            @Valid @RequestBody ApproveActionRequest request) {
-        ActionCapture actionCapture = actionService.approveAction(
-                actionId,
-                request.getApproverId(),
-                request.getApprovalNotes()
-        );
-        return ResponseEntity.ok(actionCapture);
+    @PutMapping("/{actionCaptureId}/approve")
+    public ResponseEntity<Action> approveAction(@PathVariable String actionCaptureId) {
+        Action action = actionService.approveAction(actionCaptureId);
+        return ResponseEntity.ok(action);
     }
 
-    @PutMapping("/{actionId}/reject")
-    public ResponseEntity<ActionCapture> rejectAction(
-            @PathVariable String actionId,
+    @PutMapping("/{actionCaptureId}/reject")
+    public ResponseEntity<Action> rejectAction(
+            @PathVariable String actionCaptureId,
             @Valid @RequestBody RejectActionRequest request) {
-        ActionCapture actionCapture = actionService.rejectAction(
-                actionId,
-                request.getRejectionReason()
-        );
-        return ResponseEntity.ok(actionCapture);
-    }
-
-    @GetMapping("/statistics")
-    public ResponseEntity<ActionStatistics> getActionStatistics(
-            @RequestParam String organizationId,
-            @RequestParam(required = false) String userId) {
-        ActionStatistics statistics = actionService.getActionStatistics(organizationId, userId);
-        return ResponseEntity.ok(statistics);
+        Action action = actionService.rejectAction(actionCaptureId, request.getRejectionReason());
+        return ResponseEntity.ok(action);
     }
 }

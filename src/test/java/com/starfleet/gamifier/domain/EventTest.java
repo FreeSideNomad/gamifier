@@ -3,7 +3,6 @@ package com.starfleet.gamifier.domain;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,98 +16,81 @@ class EventTest {
         Event event = Event.builder()
                 .organizationId("org123")
                 .userId("user123")
-                .eventType(Event.EventType.ACTION_COMPLETED)
-                .title("Test Event")
-                .description("Test event description")
-                .data(Map.of("key", "value"))
+                .eventType(EventType.ACTION_CAPTURED)
+                .data("Test event data")
                 .build();
 
         assertNotNull(event);
         assertEquals("org123", event.getOrganizationId());
         assertEquals("user123", event.getUserId());
-        assertEquals(Event.EventType.ACTION_COMPLETED, event.getEventType());
-        assertEquals("Test Event", event.getTitle());
-        assertEquals("Test event description", event.getDescription());
-        assertEquals("value", event.getData().get("key"));
+        assertEquals(EventType.ACTION_CAPTURED, event.getEventType());
+        assertEquals("Test event data", event.getData());
         assertNotNull(event.getTimestamp());
     }
 
     @Test
-    void shouldCreateActionCompletedEvent() {
-        String orgId = "org123";
-        String userId = "user123";
-        String actionName = "Away Mission";
-        Integer points = 50;
+    void shouldCreateActionCapturedEvent() {
+        Event event = Event.builder()
+                .organizationId("org123")
+                .userId("user123")
+                .eventType(EventType.ACTION_CAPTURED)
+                .data("Action 'Away Mission' captured by John Doe (50 points)")
+                .build();
 
-        Event event = Event.actionCompleted(orgId, userId, actionName, points);
-
-        assertEquals(orgId, event.getOrganizationId());
-        assertEquals(userId, event.getUserId());
-        assertEquals(Event.EventType.ACTION_COMPLETED, event.getEventType());
-        assertEquals("Action Completed", event.getTitle());
-        assertEquals("Completed action: Away Mission (+50 points)", event.getDescription());
-        assertEquals(actionName, event.getData().get("actionName"));
-        assertEquals(points, event.getData().get("points"));
+        assertEquals("org123", event.getOrganizationId());
+        assertEquals("user123", event.getUserId());
+        assertEquals(EventType.ACTION_CAPTURED, event.getEventType());
+        assertEquals("Action 'Away Mission' captured by John Doe (50 points)", event.getData());
         assertNotNull(event.getTimestamp());
     }
 
     @Test
     void shouldCreateMissionCompletedEvent() {
-        String orgId = "org123";
-        String userId = "user123";
-        String missionName = "Explorer";
-        String badge = "🌌";
-        Integer bonusPoints = 200;
+        Event event = Event.builder()
+                .organizationId("org123")
+                .userId("user123")
+                .eventType(EventType.MISSION_COMPLETED)
+                .data("Mission 'Explorer' completed! Earned badge: 🌌 (+200 bonus points)")
+                .build();
 
-        Event event = Event.missionCompleted(orgId, userId, missionName, badge, bonusPoints);
-
-        assertEquals(orgId, event.getOrganizationId());
-        assertEquals(userId, event.getUserId());
-        assertEquals(Event.EventType.MISSION_COMPLETED, event.getEventType());
-        assertEquals("Mission Completed!", event.getTitle());
-        assertEquals("Earned badge: 🌌 for completing Explorer (+200 bonus points)", event.getDescription());
-        assertEquals(missionName, event.getData().get("missionName"));
-        assertEquals(badge, event.getData().get("badge"));
-        assertEquals(bonusPoints, event.getData().get("bonusPoints"));
+        assertEquals("org123", event.getOrganizationId());
+        assertEquals("user123", event.getUserId());
+        assertEquals(EventType.MISSION_COMPLETED, event.getEventType());
+        assertEquals("Mission 'Explorer' completed! Earned badge: 🌌 (+200 bonus points)", event.getData());
         assertNotNull(event.getTimestamp());
     }
 
     @Test
-    void shouldCreateRankAchievedEvent() {
-        String orgId = "org123";
-        String userId = "user123";
-        String rankName = "Captain";
-        String insignia = "🔴🔴";
+    void shouldCreateRankPromotedEvent() {
+        Event event = Event.builder()
+                .organizationId("org123")
+                .userId("user123")
+                .eventType(EventType.RANK_PROMOTED)
+                .data("Promoted to rank: Captain 🔴🔴")
+                .build();
 
-        Event event = Event.rankAchieved(orgId, userId, rankName, insignia);
-
-        assertEquals(orgId, event.getOrganizationId());
-        assertEquals(userId, event.getUserId());
-        assertEquals(Event.EventType.RANK_ACHIEVED, event.getEventType());
-        assertEquals("Rank Promotion!", event.getTitle());
-        assertEquals("Achieved rank: Captain 🔴🔴", event.getDescription());
-        assertEquals(rankName, event.getData().get("rankName"));
-        assertEquals(insignia, event.getData().get("insignia"));
+        assertEquals("org123", event.getOrganizationId());
+        assertEquals("user123", event.getUserId());
+        assertEquals(EventType.RANK_PROMOTED, event.getEventType());
+        assertEquals("Promoted to rank: Captain 🔴🔴", event.getData());
         assertNotNull(event.getTimestamp());
     }
 
     @Test
     void shouldTestAllEventTypes() {
         // Test all event types exist and can be used
-        Event.EventType[] allTypes = Event.EventType.values();
+        EventType[] allTypes = EventType.values();
 
-        assertTrue(allTypes.length >= 9);
+        assertTrue(allTypes.length >= 7);
 
         // Verify specific event types exist
-        assertNotNull(Event.EventType.ACTION_COMPLETED);
-        assertNotNull(Event.EventType.ACTION_APPROVED);
-        assertNotNull(Event.EventType.ACTION_REJECTED);
-        assertNotNull(Event.EventType.MISSION_PROGRESS);
-        assertNotNull(Event.EventType.MISSION_COMPLETED);
-        assertNotNull(Event.EventType.RANK_ACHIEVED);
-        assertNotNull(Event.EventType.POINTS_AWARDED);
-        assertNotNull(Event.EventType.USER_REGISTERED);
-        assertNotNull(Event.EventType.CONFIGURATION_CHANGED);
+        assertNotNull(EventType.USER_REGISTERED);
+        assertNotNull(EventType.ACTION_CAPTURED);
+        assertNotNull(EventType.ACTION_APPROVED);
+        assertNotNull(EventType.ACTION_REJECTED);
+        assertNotNull(EventType.MISSION_COMPLETED);
+        assertNotNull(EventType.RANK_PROMOTED);
+        assertNotNull(EventType.POINTS_AWARDED);
     }
 
     @Test
@@ -118,9 +100,8 @@ class EventTest {
         Event event = Event.builder()
                 .organizationId("org123")
                 .userId("user123")
-                .eventType(Event.EventType.USER_REGISTERED)
-                .title("User Registered")
-                .description("New user joined Starfleet")
+                .eventType(EventType.USER_REGISTERED)
+                .data("New user joined Starfleet")
                 .timestamp(customTime)
                 .build();
 
@@ -132,10 +113,8 @@ class EventTest {
         Event event = Event.builder()
                 .organizationId("org123")
                 .userId("user123")
-                .eventType(Event.EventType.CONFIGURATION_CHANGED)
-                .title("Config Changed")
-                .description("Admin updated configuration")
-                .data(Map.of())
+                .eventType(EventType.POINTS_AWARDED)
+                .data("")
                 .build();
 
         assertNotNull(event.getData());
@@ -147,9 +126,7 @@ class EventTest {
         Event event = Event.builder()
                 .organizationId("org123")
                 .userId("user123")
-                .eventType(Event.EventType.POINTS_AWARDED)
-                .title("Points Awarded")
-                .description("Bonus points awarded")
+                .eventType(EventType.POINTS_AWARDED)
                 .build();
 
         // Data can be null

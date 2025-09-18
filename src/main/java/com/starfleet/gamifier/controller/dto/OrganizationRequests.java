@@ -2,9 +2,9 @@ package com.starfleet.gamifier.controller.dto;
 
 import com.starfleet.gamifier.domain.CaptureMethod;
 import com.starfleet.gamifier.domain.ReporterType;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
-import jakarta.validation.constraints.*;
 import java.util.List;
 import java.util.Set;
 

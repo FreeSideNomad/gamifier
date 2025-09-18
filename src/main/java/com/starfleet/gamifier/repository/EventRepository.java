@@ -1,9 +1,10 @@
 package com.starfleet.gamifier.repository;
 
 import com.starfleet.gamifier.domain.Event;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import com.starfleet.gamifier.domain.EventType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
@@ -25,7 +26,7 @@ public interface EventRepository extends MongoRepository<Event, String> {
 
     Page<Event> findByOrganizationId(String organizationId, Pageable pageable);
 
-    List<Event> findByOrganizationIdAndEventType(String organizationId, Event.EventType eventType);
+    List<Event> findByOrganizationIdAndEventType(String organizationId, EventType eventType);
 
     List<Event> findByOrganizationIdAndTimestampBetween(String organizationId, Instant start, Instant end);
 
@@ -33,5 +34,5 @@ public interface EventRepository extends MongoRepository<Event, String> {
 
     long countByOrganizationIdAndUserId(String organizationId, String userId);
 
-    long countByOrganizationIdAndEventType(String organizationId, Event.EventType eventType);
+    long countByOrganizationIdAndEventType(String organizationId, EventType eventType);
 }

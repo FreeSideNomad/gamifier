@@ -1,11 +1,11 @@
 package com.starfleet.gamifier.controller.dto;
 
-import com.starfleet.gamifier.domain.ReporterType;
-import lombok.Data;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
+import lombok.Data;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -16,26 +16,17 @@ public class ActionRequests {
 
     @Data
     public static class CaptureActionRequest {
-        @NotBlank(message = "Organization ID is required")
-        private String organizationId;
-
-        @NotBlank(message = "User ID is required")
-        private String userId;
-
         @NotBlank(message = "Action type ID is required")
         private String actionTypeId;
 
-        @NotNull(message = "Date is required")
-        private LocalDate date;
+        @NotNull(message = "Action date is required")
+        private LocalDate actionDate;
 
-        @NotNull(message = "Reporter type is required")
-        private ReporterType reporterType;
+        private String targetUserId; // If capturing for someone else
 
-        @NotBlank(message = "Reporter ID is required")
-        private String reporterId;
-
-        @Size(max = 500, message = "Evidence must not exceed 500 characters")
         private String evidence;
+
+        private String notes;
     }
 
     @Data
@@ -55,6 +46,7 @@ public class ActionRequests {
     }
 
     @Data
+    @Builder
     public static class ImportResult {
         private Integer totalRecords;
         private Integer successfulImports;

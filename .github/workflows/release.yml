@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Run tests
+        run: mvn clean test
+        env:
+          SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/starfleet_gamifier_test
+
+      - name: Build and package
+        run: mvn clean package -DskipTests
+
+      - name: Extract version
+        id: extract_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Starfleet Gamifier ${{ steps.extract_version.outputs.VERSION }}
+          body: |
+            ## 🚀 Starfleet Gamifier Release ${{ steps.extract_version.outputs.VERSION }}
+            
+            ### Features
+            - Star Trek themed employee gamification system
+            - Multi-tenant organization support
+            - Action tracking and mission progress
+            - LCARS-inspired design system
+            
+            ### Technical Highlights
+            - Spring Boot 3.5.5 with Java 17
+            - MongoDB for data persistence
+            - Domain-driven design architecture
+            - Comprehensive test coverage
+            
+            ### Deployment
+            Ready for OpenShift deployment with Azure AD integration.
+            
+            🖖 Live long and prosper!
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: target/gamifier-1.0.0-SNAPSHOT.jar
+          asset_name: starfleet-gamifier-${{ steps.extract_version.outputs.VERSION }}.jar
+          asset_content_type: application/java-archive

@@ -1,0 +1,323 @@
+// LCARS Theme Global Styles
+// Star Trek LCARS (Library Computer Access/Retrieval System) inspired theme
+
+// LCARS Color Palette
+:root {
+  // Primary LCARS Colors
+  --lcars-amber: #ff9900;
+  --lcars-blue: #0099cc;
+  --lcars-red: #cc0000;
+  --lcars-light-blue: #99ccff;
+  --lcars-dark-blue: #003366;
+
+  // Background Colors
+  --lcars-black: #000000;
+  --lcars-dark-gray: #333333;
+  --lcars-medium-gray: #666666;
+  --lcars-light-gray: #cccccc;
+
+  // Status Colors
+  --lcars-green: #00cc00;
+  --lcars-yellow: #ffcc00;
+  --lcars-orange: #ff6600;
+  --lcars-purple: #6600cc;
+
+  // Text Colors
+  --lcars-text-primary: #ffffff;
+  --lcars-text-secondary: #99ccff;
+  --lcars-text-disabled: #666666;
+}
+
+// LCARS Typography
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Orbitron', 'Courier New', monospace;
+  background-color: var(--lcars-black);
+  color: var(--lcars-text-primary);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+// LCARS Typography Classes
+.lcars-text {
+  &-primary { color: var(--lcars-text-primary); }
+  &-secondary { color: var(--lcars-text-secondary); }
+  &-disabled { color: var(--lcars-text-disabled); }
+  &-amber { color: var(--lcars-amber); }
+  &-blue { color: var(--lcars-blue); }
+  &-red { color: var(--lcars-red); }
+  &-green { color: var(--lcars-green); }
+}
+
+// LCARS Button Base Styles
+.lcars-button {
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 12px 24px;
+  margin: 4px;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: scale(1.05);
+    filter: brightness(1.2);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &.primary {
+    background-color: var(--lcars-amber);
+    color: var(--lcars-black);
+  }
+
+  &.secondary {
+    background-color: var(--lcars-blue);
+    color: var(--lcars-text-primary);
+  }
+
+  &.danger {
+    background-color: var(--lcars-red);
+    color: var(--lcars-text-primary);
+  }
+
+  &.success {
+    background-color: var(--lcars-green);
+    color: var(--lcars-black);
+  }
+}
+
+// LCARS Panel Styles
+.lcars-panel {
+  background: linear-gradient(145deg, var(--lcars-dark-gray), var(--lcars-medium-gray));
+  border: 2px solid var(--lcars-amber);
+  border-radius: 15px;
+  padding: 20px;
+  margin: 10px;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, var(--lcars-amber), var(--lcars-blue));
+    border-radius: 15px;
+    z-index: -1;
+  }
+
+  &.accent-blue {
+    border-color: var(--lcars-blue);
+    &::before {
+      background: linear-gradient(45deg, var(--lcars-blue), var(--lcars-light-blue));
+    }
+  }
+
+  &.accent-red {
+    border-color: var(--lcars-red);
+    &::before {
+      background: linear-gradient(45deg, var(--lcars-red), var(--lcars-orange));
+    }
+  }
+}
+
+// LCARS Layout Grid
+.lcars-grid {
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+
+  &.two-column {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  &.three-column {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  &.sidebar-layout {
+    grid-template-columns: 300px 1fr;
+  }
+}
+
+// LCARS Header Styles
+.lcars-header {
+  background: linear-gradient(90deg, var(--lcars-dark-blue), var(--lcars-blue));
+  padding: 20px;
+  border-bottom: 3px solid var(--lcars-amber);
+
+  h1, h2, h3 {
+    color: var(--lcars-amber);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+}
+
+// LCARS Navigation
+.lcars-nav {
+  background-color: var(--lcars-dark-gray);
+  padding: 20px;
+  border-right: 3px solid var(--lcars-blue);
+
+  .nav-item {
+    display: block;
+    padding: 15px 20px;
+    margin: 5px 0;
+    background-color: var(--lcars-medium-gray);
+    color: var(--lcars-text-primary);
+    text-decoration: none;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-weight: 700;
+
+    &:hover {
+      background-color: var(--lcars-blue);
+      color: var(--lcars-black);
+      transform: translateX(10px);
+    }
+
+    &.active {
+      background-color: var(--lcars-amber);
+      color: var(--lcars-black);
+    }
+  }
+}
+
+// LCARS Progress Bar
+.lcars-progress {
+  width: 100%;
+  height: 20px;
+  background-color: var(--lcars-dark-gray);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--lcars-blue), var(--lcars-light-blue));
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: progressShine 2s infinite;
+    }
+  }
+}
+
+@keyframes progressShine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+// LCARS Badge/Rank Display
+.lcars-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  background: linear-gradient(45deg, var(--lcars-amber), var(--lcars-yellow));
+  color: var(--lcars-black);
+  border-radius: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 5px;
+  font-size: 0.9em;
+
+  &.rank {
+    background: linear-gradient(45deg, var(--lcars-blue), var(--lcars-light-blue));
+    color: var(--lcars-text-primary);
+  }
+
+  &.mission {
+    background: linear-gradient(45deg, var(--lcars-green), var(--lcars-yellow));
+    color: var(--lcars-black);
+  }
+}
+
+// LCARS Data Display
+.lcars-data-display {
+  background-color: var(--lcars-dark-gray);
+  border: 2px solid var(--lcars-blue);
+  border-radius: 10px;
+  padding: 15px;
+  font-family: 'Courier New', monospace;
+
+  .data-label {
+    color: var(--lcars-text-secondary);
+    font-size: 0.9em;
+    text-transform: uppercase;
+  }
+
+  .data-value {
+    color: var(--lcars-amber);
+    font-size: 1.5em;
+    font-weight: 700;
+  }
+}
+
+// LCARS Animation Classes
+.lcars-fade-in {
+  animation: lcarsFlickerIn 0.5s ease-in-out;
+}
+
+@keyframes lcarsFlickerIn {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 0.5; transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+// Responsive Design for LCARS
+@media (max-width: 768px) {
+  .lcars-grid {
+    &.two-column,
+    &.three-column,
+    &.sidebar-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .lcars-nav {
+    border-right: none;
+    border-bottom: 3px solid var(--lcars-blue);
+  }
+}
+
+// Scrollbar Styling
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--lcars-dark-gray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--lcars-blue);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--lcars-amber);
+}

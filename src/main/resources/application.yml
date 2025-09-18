@@ -12,9 +12,6 @@ spring:
       database: starfleet_gamifier
       auto-index-creation: true
 
-  security:
-    # Disable security for now - will be configured later for Azure AD
-    enabled: false
 
 management:
   endpoints:
@@ -32,7 +29,6 @@ logging:
   pattern:
     console: '%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
 
-# Star Trek themed configuration
 starfleet:
   gamifier:
     default-organization:
@@ -110,16 +106,16 @@ starfleet:
         badge: "🎓"
         bonus-points: 100
         category: "Training"
-        required-actions: ["Training Course Completion"]
+        required-actions: [ "Training Course Completion" ]
       - name: "Explorer"
         description: "Participate in multiple away missions"
         badge: "🌍"
         bonus-points: 150
         category: "Exploration"
-        required-actions: ["Away Mission Participation", "Problem Resolution"]
+        required-actions: [ "Away Mission Participation", "Problem Resolution" ]
       - name: "Innovator"
         description: "Drive innovation and improvement"
         badge: "💡"
         bonus-points: 200
         category: "Innovation"
-        required-actions: ["Innovation Proposal", "Team Collaboration"]
+        required-actions: [ "Innovation Proposal", "Team Collaboration" ]

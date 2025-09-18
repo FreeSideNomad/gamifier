@@ -1,6 +1,7 @@
 package com.starfleet.gamifier.config;
 
 import com.starfleet.gamifier.repository.OrganizationRepository;
+import com.starfleet.gamifier.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +23,9 @@ class DefaultDataInitializerTest {
     private OrganizationRepository organizationRepository;
 
     @Mock
+    private UserRepository userRepository;
+
+    @Mock
     private ApplicationArguments applicationArguments;
 
     @InjectMocks
@@ -30,7 +34,7 @@ class DefaultDataInitializerTest {
     @BeforeEach
     void setUp() {
         // Reset mock interactions before each test
-        reset(organizationRepository);
+        reset(organizationRepository, userRepository);
     }
 
     @Test
@@ -41,6 +45,7 @@ class DefaultDataInitializerTest {
 
         verify(organizationRepository).existsByFederationId("UFP-001");
         verify(organizationRepository).save(any());
+        verify(userRepository, times(3)).save(any()); // 3 default users created
     }
 
     @Test
