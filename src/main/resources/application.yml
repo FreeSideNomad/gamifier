@@ -1,0 +1,125 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: starfleet-gamifier
+
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: starfleet_gamifier
+      auto-index-creation: true
+
+  security:
+    # Disable security for now - will be configured later for Azure AD
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.starfleet: DEBUG
+    org.springframework.data.mongodb: DEBUG
+  pattern:
+    console: '%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
+
+# Star Trek themed configuration
+starfleet:
+  gamifier:
+    default-organization:
+      name: "United Federation of Planets"
+      federation-id: "UFP-001"
+      description: "Default Starfleet organization for gamification"
+
+    default-ranks:
+      - name: "Cadet"
+        description: "Entry level Starfleet personnel"
+        points-threshold: 0
+        insignia: "🔸"
+        order: 1
+      - name: "Ensign"
+        description: "Junior commissioned officer"
+        points-threshold: 100
+        insignia: "⭐"
+        order: 2
+      - name: "Lieutenant Junior Grade"
+        description: "Junior Lieutenant"
+        points-threshold: 250
+        insignia: "⭐⭐"
+        order: 3
+      - name: "Lieutenant"
+        description: "Full Lieutenant"
+        points-threshold: 500
+        insignia: "⭐⭐⭐"
+        order: 4
+      - name: "Lieutenant Commander"
+        description: "Senior Lieutenant"
+        points-threshold: 1000
+        insignia: "🔵⭐"
+        order: 5
+      - name: "Commander"
+        description: "Senior officer"
+        points-threshold: 2000
+        insignia: "🔵🔵"
+        order: 6
+      - name: "Captain"
+        description: "Ship commander"
+        points-threshold: 4000
+        insignia: "🔴🔴"
+        order: 7
+      - name: "Admiral"
+        description: "Fleet commander"
+        points-threshold: 8000
+        insignia: "🔴🔴🔴"
+        order: 8
+
+    default-action-types:
+      - name: "Away Mission Participation"
+        description: "Participated in away mission or field work"
+        points: 50
+        category: "Exploration"
+      - name: "Training Course Completion"
+        description: "Completed mandatory or optional training"
+        points: 25
+        category: "Professional Development"
+      - name: "Innovation Proposal"
+        description: "Submitted improvement or innovation idea"
+        points: 75
+        category: "Innovation"
+      - name: "Team Collaboration"
+        description: "Demonstrated exceptional teamwork"
+        points: 30
+        category: "Collaboration"
+      - name: "Problem Resolution"
+        description: "Solved critical operational problem"
+        points: 100
+        category: "Engineering"
+
+    default-mission-types:
+      - name: "Academy Graduate"
+        description: "Complete all basic training requirements"
+        badge: "🎓"
+        bonus-points: 100
+        category: "Training"
+        required-actions: ["Training Course Completion"]
+      - name: "Explorer"
+        description: "Participate in multiple away missions"
+        badge: "🌍"
+        bonus-points: 150
+        category: "Exploration"
+        required-actions: ["Away Mission Participation", "Problem Resolution"]
+      - name: "Innovator"
+        description: "Drive innovation and improvement"
+        badge: "💡"
+        bonus-points: 200
+        category: "Innovation"
+        required-actions: ["Innovation Proposal", "Team Collaboration"]

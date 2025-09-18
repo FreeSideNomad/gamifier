@@ -1,0 +1,10 @@
+spring:
+  data:
+    mongodb:
+      database: starfleet_gamifier_test
+
+logging:
+  level:
+    com.starfleet: DEBUG
+    org.springframework.data.mongodb: WARN
+    org.testcontainers: WARN
