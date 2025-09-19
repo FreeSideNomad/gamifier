@@ -194,4 +194,39 @@ export class ApiService {
   isLoading(): boolean {
     return this.loadingSubject.value;
   }
+
+  /**
+   * Get current user (placeholder method for tests)
+   */
+  getCurrentUser(): Observable<any> {
+    return this.get('users/me');
+  }
+
+  /**
+   * Get user statistics (placeholder method for tests)
+   */
+  getUserStats(): Observable<any> {
+    return this.get('dashboard/stats');
+  }
+
+  /**
+   * Get recent activity (placeholder method for tests)
+   */
+  getRecentActivity(): Observable<any> {
+    return this.get('activity/recent');
+  }
+
+  /**
+   * Get active missions (placeholder method for tests)
+   */
+  getActiveMissions(): Observable<any> {
+    return this.get('missions/active');
+  }
+
+  /**
+   * Get leaderboard preview (placeholder method for tests)
+   */
+  getLeaderboardPreview(): Observable<any> {
+    return this.get('leaderboards/preview');
+  }
 }

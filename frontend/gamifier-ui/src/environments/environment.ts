@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8080/api',
+  apiUrl: 'http://localhost:9080/api',
   appName: 'Starfleet Gamifier',
   version: '1.0.0',
   audio: {

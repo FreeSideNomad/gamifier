@@ -1,0 +1,293 @@
+<!-- Dashboard Loading State -->
+<div class="dashboard-loading" *ngIf="isLoading()">
+  <div class="loading-indicator">
+    <h2 class="lcars-text-amber">ACCESSING PERSONAL RECORDS</h2>
+    <div class="loading-progress">
+      <div class="progress-bar"></div>
+    </div>
+    <p class="lcars-text-secondary">Retrieving mission data and statistics...</p>
+  </div>
+</div>
+
+<!-- Main Dashboard Content -->
+<div class="dashboard-container" *ngIf="!isLoading()">
+  <!-- Dashboard Header -->
+  <header class="dashboard-header">
+    <div class="header-left">
+      <h1 class="dashboard-title">Command Dashboard</h1>
+      <p class="dashboard-subtitle">Personal Mission Control Interface</p>
+    </div>
+    <div class="header-controls">
+      <!-- Timeframe Selector -->
+      <div class="timeframe-selector">
+        <label class="lcars-text-amber">View Period:</label>
+        <div class="timeframe-buttons">
+          <button
+            class="lcars-button"
+            [class.active]="selectedTimeframe() === 'week'"
+            (click)="onTimeframeChange('week')"
+            (mouseenter)="playHoverSound()">
+            Week
+          </button>
+          <button
+            class="lcars-button"
+            [class.active]="selectedTimeframe() === 'month'"
+            (click)="onTimeframeChange('month')"
+            (mouseenter)="playHoverSound()">
+            Month
+          </button>
+          <button
+            class="lcars-button"
+            [class.active]="selectedTimeframe() === 'year'"
+            (click)="onTimeframeChange('year')"
+            (mouseenter)="playHoverSound()">
+            Year
+          </button>
+        </div>
+      </div>
+
+      <!-- Refresh Button -->
+      <button
+        class="lcars-button primary refresh-btn"
+        (click)="onRefresh()"
+        (mouseenter)="playHoverSound()">
+        🔄 Refresh
+      </button>
+    </div>
+  </header>
+
+  <!-- Statistics Overview Grid -->
+  <section class="stats-grid">
+    <!-- Total Points Card -->
+    <div class="stat-card lcars-panel accent-amber">
+      <div class="stat-header">
+        <h3>Total Points</h3>
+        <div class="stat-icon">⭐</div>
+      </div>
+      <div class="stat-value lcars-text-amber">{{ stats().totalPoints | number }}</div>
+      <div class="stat-label">Career Achievement Points</div>
+    </div>
+
+    <!-- Current Rank Card -->
+    <div class="stat-card lcars-panel accent-blue">
+      <div class="stat-header">
+        <h3>Current Rank</h3>
+        <div class="stat-icon">🏅</div>
+      </div>
+      <div class="stat-value lcars-text-blue">{{ stats().rank }}</div>
+      <div class="stat-label">Starfleet Commission</div>
+    </div>
+
+    <!-- Missions Completed Card -->
+    <div class="stat-card lcars-panel accent-green">
+      <div class="stat-header">
+        <h3>Missions Completed</h3>
+        <div class="stat-icon">🎯</div>
+      </div>
+      <div class="stat-value lcars-text-green">{{ stats().missionsCompleted }}</div>
+      <div class="stat-label">Successful Operations</div>
+    </div>
+
+    <!-- Active Missions Card -->
+    <div class="stat-card lcars-panel accent-orange">
+      <div class="stat-header">
+        <h3>Active Missions</h3>
+        <div class="stat-icon">⚡</div>
+      </div>
+      <div class="stat-value lcars-text-orange">{{ stats().activeMissions }}</div>
+      <div class="stat-label">Ongoing Operations</div>
+    </div>
+
+    <!-- Leaderboard Position Card -->
+    <div class="stat-card lcars-panel accent-red">
+      <div class="stat-header">
+        <h3>Leaderboard Rank</h3>
+        <div class="stat-icon">🏆</div>
+      </div>
+      <div class="stat-value lcars-text-red">#{{ stats().leaderboardPosition }}</div>
+      <div class="stat-label">Fleet Standing</div>
+    </div>
+
+    <!-- Weekly Progress Card -->
+    <div class="stat-card lcars-panel accent-blue">
+      <div class="stat-header">
+        <h3>Weekly Progress</h3>
+        <div class="stat-icon">📈</div>
+      </div>
+      <div class="stat-value lcars-text-blue">{{ stats().weeklyProgress }}%</div>
+      <div class="stat-progress">
+        <div class="lcars-progress">
+          <div class="progress-bar" [style.width.%]="progressPercentage()"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Grid -->
+  <div class="dashboard-content-grid">
+    <!-- Active Missions Section -->
+    <section class="missions-section">
+      <div class="section-header">
+        <h2 class="section-title">Active Missions</h2>
+        <button class="lcars-button secondary" (click)="onRefresh()" (mouseenter)="playHoverSound()">
+          View All
+        </button>
+      </div>
+
+      <div class="missions-list" *ngIf="activeMissions().length > 0; else noMissions">
+        <div
+          class="mission-card lcars-panel"
+          *ngFor="let mission of activeMissions(); trackBy: trackByMissionId"
+          [class]="'accent-' + getDifficultyAccent(mission.difficulty)"
+          (click)="onMissionClick(mission)"
+          (mouseenter)="playHoverSound()">
+
+          <div class="mission-header">
+            <h4 class="mission-title">{{ mission.title }}</h4>
+            <div class="mission-difficulty">
+              <span class="difficulty-badge" [class]="getDifficultyColor(mission.difficulty)">
+                {{ mission.difficulty }}
+              </span>
+            </div>
+          </div>
+
+          <p class="mission-description">{{ mission.description }}</p>
+
+          <div class="mission-progress">
+            <div class="progress-info">
+              <span class="progress-text">
+                {{ mission.completedSteps }}/{{ mission.totalSteps }} Steps
+              </span>
+              <span class="progress-percentage">{{ mission.progress }}%</span>
+            </div>
+            <div class="lcars-progress">
+              <div class="progress-bar" [style.width.%]="mission.progress"></div>
+            </div>
+          </div>
+
+          <div class="mission-footer">
+            <div class="mission-reward">
+              <span class="lcars-text-amber">{{ mission.pointsReward }} PTS</span>
+            </div>
+            <div class="mission-deadline" *ngIf="mission.deadline">
+              <span class="lcars-text-red">Due: {{ mission.deadline | date:'MMM dd' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noMissions>
+        <div class="empty-state lcars-panel accent-blue">
+          <div class="empty-icon">🎯</div>
+          <h3>No Active Missions</h3>
+          <p>Visit the Missions section to accept new assignments.</p>
+        </div>
+      </ng-template>
+    </section>
+
+    <!-- Recent Activity Section -->
+    <section class="activity-section">
+      <div class="section-header">
+        <h2 class="section-title">Recent Activity</h2>
+        <button class="lcars-button secondary" (click)="onRefresh()" (mouseenter)="playHoverSound()">
+          View Log
+        </button>
+      </div>
+
+      <div class="activity-feed" *ngIf="recentActivity().length > 0; else noActivity">
+        <div
+          class="activity-item"
+          *ngFor="let activity of recentActivity(); trackBy: trackByActivityId">
+
+          <div class="activity-icon">{{ getActivityIcon(activity.type) }}</div>
+
+          <div class="activity-content">
+            <p class="activity-description">{{ activity.description }}</p>
+            <div class="activity-meta">
+              <span class="activity-time lcars-text-secondary">
+                {{ activity.timestamp | date:'MMM dd, HH:mm' }}
+              </span>
+              <span class="activity-points lcars-text-amber" *ngIf="activity.points">
+                +{{ activity.points }} PTS
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noActivity>
+        <div class="empty-state lcars-panel accent-blue">
+          <div class="empty-icon">📊</div>
+          <h3>No Recent Activity</h3>
+          <p>Your recent actions will appear here.</p>
+        </div>
+      </ng-template>
+    </section>
+
+    <!-- Leaderboard Preview Section -->
+    <section class="leaderboard-section">
+      <div class="section-header">
+        <h2 class="section-title">Top Performers</h2>
+        <button class="lcars-button secondary" (click)="onRefresh()" (mouseenter)="playHoverSound()">
+          Full Board
+        </button>
+      </div>
+
+      <div class="leaderboard-preview" *ngIf="topLeaderboard().length > 0; else noLeaderboard">
+        <div
+          class="leaderboard-item"
+          *ngFor="let entry of topLeaderboard(); trackBy: trackByLeaderboardRank"
+          [class.current-user]="entry.name === 'Commander Data'">
+
+          <div class="rank-position">
+            <span class="rank-number">#{{ entry.rank }}</span>
+            <div class="rank-change" *ngIf="entry.change !== 0">
+              <span [class]="entry.change > 0 ? 'lcars-text-green' : 'lcars-text-red'">
+                {{ entry.change > 0 ? '↑' : '↓' }}{{ abs(entry.change) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="officer-info">
+            <span class="officer-name">{{ entry.name }}</span>
+            <span class="officer-points lcars-text-amber">{{ entry.points | number }} PTS</span>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noLeaderboard>
+        <div class="empty-state lcars-panel accent-blue">
+          <div class="empty-icon">🏆</div>
+          <h3>Leaderboard Unavailable</h3>
+          <p>Check back later for rankings.</p>
+        </div>
+      </ng-template>
+    </section>
+  </div>
+
+  <!-- Quick Actions Bar -->
+  <footer class="quick-actions">
+    <h3 class="quick-actions-title">Quick Actions</h3>
+    <div class="actions-grid">
+      <button class="action-button lcars-panel accent-green" (click)="onLogAction()" (mouseenter)="playHoverSound()">
+        <div class="action-icon">📝</div>
+        <span>Log Action</span>
+      </button>
+
+      <button class="action-button lcars-panel accent-blue" (click)="onViewMissions()" (mouseenter)="playHoverSound()">
+        <div class="action-icon">🎯</div>
+        <span>View Missions</span>
+      </button>
+
+      <button class="action-button lcars-panel accent-amber" (click)="onViewLeaderboard()" (mouseenter)="playHoverSound()">
+        <div class="action-icon">🏆</div>
+        <span>Leaderboard</span>
+      </button>
+
+      <button class="action-button lcars-panel accent-orange" (click)="onViewAnalytics()" (mouseenter)="playHoverSound()">
+        <div class="action-icon">📊</div>
+        <span>Analytics</span>
+      </button>
+    </div>
+  </footer>
+</div>
