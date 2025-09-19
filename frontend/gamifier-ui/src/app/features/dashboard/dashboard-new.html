@@ -1,5 +1,40 @@
 <!-- Proxima-style Dashboard -->
 <div>
+  <!-- Welcome Message -->
+  <div class="lcars-alert info" style="margin-bottom: 20px;">
+    <strong>Welcome to Starfleet Gamifier</strong> - Your mission progress tracking system is active and ready for operation.
+    Use the navigation panel to access different system functions.
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="lcars-panel" style="opacity: 1; transform: translateX(0px); transition: 0.5s; margin-bottom: 20px;">
+    <div class="lcars-panel-header">
+      Quick Actions
+    </div>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+      <button class="lcars-button success"
+              (click)="onLogAction()"
+              (mouseenter)="playHoverSound()">
+        Log Action
+      </button>
+      <button class="lcars-button info"
+              (click)="onViewMissions()"
+              (mouseenter)="playHoverSound()">
+        View Missions
+      </button>
+      <button class="lcars-button"
+              (click)="onViewLeaderboard()"
+              (mouseenter)="playHoverSound()">
+        Leaderboard
+      </button>
+      <button class="lcars-button danger"
+              (click)="onViewAnalytics()"
+              (mouseenter)="playHoverSound()">
+        Analytics
+      </button>
+    </div>
+  </div>
+
   <!-- Dashboard Header -->
   <div class="lcars-panel" style="opacity: 1; transform: translateX(0px); transition: 0.5s;">
     <div class="lcars-panel-header">
@@ -190,38 +225,10 @@
     </ng-template>
   </div>
 
-  <!-- Quick Actions -->
-  <div class="lcars-panel" style="opacity: 1; transform: translateX(0px); transition: 0.5s;">
-    <div class="lcars-panel-header">
-      Quick Actions
-    </div>
-    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-      <button class="lcars-button success"
-              (click)="onLogAction()"
-              (mouseenter)="playHoverSound()">
-        Log Action
-      </button>
-      <button class="lcars-button info"
-              (click)="onViewMissions()"
-              (mouseenter)="playHoverSound()">
-        View Missions
-      </button>
-      <button class="lcars-button"
-              (click)="onViewLeaderboard()"
-              (mouseenter)="playHoverSound()">
-        Leaderboard
-      </button>
-      <button class="lcars-button danger"
-              (click)="onViewAnalytics()"
-              (mouseenter)="playHoverSound()">
-        Analytics
-      </button>
-    </div>
-  </div>
-
-  <!-- Welcome Message -->
-  <div class="lcars-alert info" style="margin-top: 20px;">
-    <strong>Welcome to Starfleet Gamifier</strong> - Your mission progress tracking system is active and ready for operation.
-    Use the navigation panel to access different system functions.
-  </div>
 </div>
+
+<!-- Action Capture Modal -->
+<app-action-capture
+  (actionSubmitted)="onActionSubmitted($event)"
+  (modalClosed)="playHoverSound()">
+</app-action-capture>

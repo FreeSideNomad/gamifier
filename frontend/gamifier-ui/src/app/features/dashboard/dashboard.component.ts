@@ -1,7 +1,8 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 import { AudioService } from '../../core/services/audio.service';
+import { ActionCaptureComponent, ActionCapture } from '../action-capture/action-capture';
 
 export interface DashboardStats {
   totalPoints: number;
@@ -35,13 +36,16 @@ export interface MissionPreview {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule],
+  imports: [CommonModule, ActionCaptureComponent],
   templateUrl: './dashboard-new.html',
   styleUrls: ['../../proxima-theme.scss']
 })
 export class DashboardComponent implements OnInit {
   private apiService = inject(ApiService);
   private audioService = inject(AudioService);
+
+  // Action Capture Modal Reference
+  @ViewChild(ActionCaptureComponent) actionCaptureModal!: ActionCaptureComponent;
 
   // Dashboard Data
   stats = signal<DashboardStats>({
@@ -266,8 +270,31 @@ export class DashboardComponent implements OnInit {
   // Quick Action Handlers
   onLogAction(): void {
     this.audioService.playButtonClick();
-    console.log('Navigate to Log Action page');
-    // TODO: Navigate to actions page or show modal
+    this.actionCaptureModal.show();
+  }
+
+  onActionSubmitted(action: ActionCapture): void {
+    console.log('Action submitted:', action);
+    // TODO: Submit action to backend API
+    // For now, add it to recent activity
+    const newActivity: RecentActivity = {
+      id: Date.now().toString(),
+      type: 'ACTION_LOGGED',
+      description: `Logged action: ${action.actionTypeId}`,
+      points: 10, // Mock points
+      timestamp: new Date(),
+      icon: '⚡'
+    };
+
+    const currentActivity = this.recentActivity();
+    this.recentActivity.set([newActivity, ...currentActivity].slice(0, 10));
+
+    // Update stats
+    const currentStats = this.stats();
+    this.stats.set({
+      ...currentStats,
+      totalPoints: currentStats.totalPoints + 10
+    });
   }
 
   onViewMissions(): void {

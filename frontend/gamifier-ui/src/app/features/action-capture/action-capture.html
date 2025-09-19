@@ -1,0 +1,157 @@
+<!-- LCARS Action Capture Modal -->
+<div class="lcars-modal-overlay" *ngIf="isVisible()" (click)="hide()">
+  <div class="lcars-modal" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="lcars-modal-header">
+      <h2 class="lcars-modal-title">ACTION CAPTURE INTERFACE</h2>
+      <button class="lcars-close-button"
+              (click)="hide()"
+              (mouseenter)="playHoverSound()"
+              aria-label="Close Modal">
+        ✕
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="lcars-modal-body">
+      <form [formGroup]="actionForm" (ngSubmit)="onSubmit()">
+
+        <!-- Action Type Selection -->
+        <div class="lcars-form-section">
+          <div class="lcars-section-header">Action Type Selection</div>
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="actionTypeId">Action Type *</label>
+            <select class="lcars-select"
+                    id="actionTypeId"
+                    formControlName="actionTypeId"
+                    (change)="playHoverSound()">
+              <option value="">Select Action Type</option>
+              <option *ngFor="let action of availableActions(); trackBy: trackByActionId"
+                      [value]="action.id">
+                {{ action.name }} ({{ action.points }} PTS) - {{ action.category }}
+              </option>
+            </select>
+            <div *ngIf="actionForm.get('actionTypeId')?.errors?.['required'] && actionForm.get('actionTypeId')?.touched"
+                 class="lcars-error">
+              Action type is required
+            </div>
+          </div>
+
+          <!-- Selected Action Preview -->
+          <div *ngIf="getSelectedAction()" class="lcars-action-preview">
+            <div class="lcars-preview-title">Selected Action</div>
+            <div class="lcars-preview-content">
+              <div class="action-name">{{ getSelectedAction()?.name }}</div>
+              <div class="action-description">{{ getSelectedAction()?.description }}</div>
+              <div class="action-points">{{ getSelectedAction()?.points }} Points</div>
+              <div class="action-category">Category: {{ getSelectedAction()?.category }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Details -->
+        <div class="lcars-form-section">
+          <div class="lcars-section-header">Action Details</div>
+
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="description">Description</label>
+            <textarea class="lcars-textarea"
+                      id="description"
+                      formControlName="description"
+                      placeholder="Provide additional details about this action..."
+                      rows="3"></textarea>
+          </div>
+
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="location">Location</label>
+            <input class="lcars-input"
+                   id="location"
+                   type="text"
+                   formControlName="location"
+                   placeholder="Where did this action take place?">
+          </div>
+
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="additionalNotes">Additional Notes</label>
+            <textarea class="lcars-textarea"
+                      id="additionalNotes"
+                      formControlName="additionalNotes"
+                      placeholder="Any additional information..."
+                      rows="2"
+                      maxlength="500"></textarea>
+            <div class="lcars-char-count">
+              {{ actionForm.get('additionalNotes')?.value?.length || 0 }}/500
+            </div>
+            <div *ngIf="actionForm.get('additionalNotes')?.errors?.['maxlength']"
+                 class="lcars-error">
+              Maximum 500 characters allowed
+            </div>
+          </div>
+        </div>
+
+        <!-- File Attachments -->
+        <div class="lcars-form-section">
+          <div class="lcars-section-header">Supporting Evidence</div>
+
+          <div class="lcars-form-group">
+            <label class="lcars-label">File Attachments</label>
+            <div class="lcars-file-upload">
+              <input type="file"
+                     id="fileInput"
+                     multiple
+                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                     (change)="onFileSelected($event)"
+                     class="lcars-file-input">
+              <label for="fileInput"
+                     class="lcars-file-label"
+                     (mouseenter)="playHoverSound()">
+                📎 Choose Files
+              </label>
+              <div class="lcars-file-help">
+                Supported: PDF, DOC, DOCX, JPG, PNG, TXT (Max 10MB each)
+              </div>
+            </div>
+
+            <!-- Selected Files Display -->
+            <div *ngIf="selectedFiles().length > 0" class="lcars-file-list">
+              <div class="lcars-file-list-header">Selected Files</div>
+              <div *ngFor="let file of selectedFiles(); let i = index; trackBy: trackByFileIndex"
+                   class="lcars-file-item">
+                <span class="file-name">{{ file.name }}</span>
+                <span class="file-size">({{ (file.size / 1024 / 1024) | number:'1.1-1' }} MB)</span>
+                <button type="button"
+                        class="lcars-remove-file"
+                        (click)="removeFile(i)"
+                        (mouseenter)="playHoverSound()"
+                        aria-label="Remove file">
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="lcars-form-actions">
+          <button type="button"
+                  class="lcars-button secondary"
+                  (click)="hide()"
+                  (mouseenter)="playHoverSound()"
+                  [disabled]="isLoading()">
+            Cancel
+          </button>
+          <button type="submit"
+                  class="lcars-button primary"
+                  (mouseenter)="playHoverSound()"
+                  [disabled]="!actionForm.valid || isLoading()">
+            <span *ngIf="!isLoading()">Submit Action</span>
+            <span *ngIf="isLoading()" class="lcars-loading">
+              <span class="lcars-spinner"></span>
+              Processing...
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
