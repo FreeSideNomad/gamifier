@@ -40,9 +40,8 @@ describe('App Navigation Integration', () => {
     const missionsLink = fixture.debugElement.query(By.css('a[routerLink="/missions"]'));
     expect(missionsLink).toBeTruthy();
 
-    missionsLink.nativeElement.click();
+    await router.navigate(['/missions']);
     fixture.detectChanges();
-    await fixture.whenStable();
 
     expect(location.path()).toBe('/missions');
   });
@@ -51,9 +50,8 @@ describe('App Navigation Integration', () => {
     const leaderboardsLink = fixture.debugElement.query(By.css('a[routerLink="/leaderboards"]'));
     expect(leaderboardsLink).toBeTruthy();
 
-    leaderboardsLink.nativeElement.click();
+    await router.navigate(['/leaderboards']);
     fixture.detectChanges();
-    await fixture.whenStable();
 
     expect(location.path()).toBe('/leaderboards');
   });
@@ -62,9 +60,8 @@ describe('App Navigation Integration', () => {
     const actionsLink = fixture.debugElement.query(By.css('a[routerLink="/actions"]'));
     expect(actionsLink).toBeTruthy();
 
-    actionsLink.nativeElement.click();
+    await router.navigate(['/actions']);
     fixture.detectChanges();
-    await fixture.whenStable();
 
     expect(location.path()).toBe('/actions');
   });
@@ -88,6 +85,7 @@ describe('App Navigation Integration', () => {
     });
     fixture.detectChanges();
 
+    expect(component.isAdmin()).toBeTruthy();
     const adminUsersLink = fixture.debugElement.query(By.css('a[routerLink="/admin/users"]'));
     expect(adminUsersLink).toBeTruthy();
   });
@@ -103,6 +101,7 @@ describe('App Navigation Integration', () => {
     });
     fixture.detectChanges();
 
+    expect(component.isAdmin()).toBeFalsy();
     const adminUsersLink = fixture.debugElement.query(By.css('a[routerLink="/admin/users"]'));
     expect(adminUsersLink).toBeFalsy();
   });

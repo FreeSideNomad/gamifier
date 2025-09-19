@@ -4,6 +4,7 @@ import { Location } from '@angular/common';
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
 import { routes } from './app.routes';
 
 @Component({
@@ -20,7 +21,8 @@ describe('App Routing', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [
-        provideRouter(routes)
+        provideRouter(routes),
+        provideHttpClient()
       ]
     }).compileComponents();
 
