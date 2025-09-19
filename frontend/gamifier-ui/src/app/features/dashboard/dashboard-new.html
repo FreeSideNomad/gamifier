@@ -1,0 +1,227 @@
+<!-- Proxima-style Dashboard -->
+<div>
+  <!-- Dashboard Header -->
+  <div class="lcars-panel" style="opacity: 1; transform: translateX(0px); transition: 0.5s;">
+    <div class="lcars-panel-header">
+      System Overview
+    </div>
+    <div class="stats-grid">
+      <div class="lcars-card">
+        <div class="lcars-card-title">Total Points</div>
+        <div style="font-size: 1.5rem; font-weight: 700; color: var(--lcars-orange);">
+          {{ stats().totalPoints | number }}
+        </div>
+      </div>
+      <div class="lcars-card">
+        <div class="lcars-card-title">Current Rank</div>
+        <div style="font-size: 1.2rem; color: var(--lcars-blue);">
+          {{ stats().rank }}
+        </div>
+      </div>
+      <div class="lcars-card">
+        <div class="lcars-card-title">Missions Completed</div>
+        <div style="font-size: 1.5rem; font-weight: 700; color: var(--lcars-green);">
+          {{ stats().missionsCompleted }}
+        </div>
+      </div>
+      <div class="lcars-card">
+        <div class="lcars-card-title">Active Missions</div>
+        <div style="font-size: 1.5rem; font-weight: 700; color: var(--lcars-purple);">
+          {{ stats().activeMissions }}
+        </div>
+      </div>
+      <div class="lcars-card">
+        <div class="lcars-card-title">Leaderboard Position</div>
+        <div style="font-size: 1.5rem; font-weight: 700; color: var(--lcars-red);">
+          #{{ stats().leaderboardPosition }}
+        </div>
+      </div>
+      <div class="lcars-card">
+        <div class="lcars-card-title">Weekly Progress</div>
+        <div style="font-size: 1.5rem; font-weight: 700; color: var(--lcars-tan);">
+          {{ stats().weeklyProgress }}%
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeframe Selector -->
+  <div class="lcars-panel" style="opacity: 1; transform: translateX(0px); transition: 0.5s;">
+    <div class="lcars-panel-header">
+      Data View Settings
+    </div>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+      <button class="lcars-button"
+              [class.active]="selectedTimeframe() === 'week'"
+              (click)="onTimeframeChange('week')"
+              (mouseenter)="playHoverSound()">
+        Week View
+      </button>
+      <button class="lcars-button"
+              [class.active]="selectedTimeframe() === 'month'"
+              (click)="onTimeframeChange('month')"
+              (mouseenter)="playHoverSound()">
+        Month View
+      </button>
+      <button class="lcars-button"
+              [class.active]="selectedTimeframe() === 'year'"
+              (click)="onTimeframeChange('year')"
+              (mouseenter)="playHoverSound()">
+        Year View
+      </button>
+      <button class="lcars-button info"
+              (click)="onRefresh()"
+              (mouseenter)="playHoverSound()">
+        Refresh Data
+      </button>
+    </div>
+  </div>
+
+  <!-- Active Missions -->
+  <div class="lcars-panel" style="opacity: 1; transform: translateX(0px); transition: 0.5s;">
+    <div class="lcars-panel-header">
+      Active Mission Status
+    </div>
+    <div *ngIf="activeMissions().length > 0; else noMissions" class="content-grid">
+      <div *ngFor="let mission of activeMissions(); trackBy: trackByMissionId"
+           class="lcars-card"
+           (click)="onMissionClick(mission)"
+           (mouseenter)="playHoverSound()"
+           style="cursor: pointer;">
+        <div class="lcars-card-title">{{ mission.title }}</div>
+        <p style="margin-bottom: 15px; color: var(--lcars-light-gray);">
+          {{ mission.description }}
+        </p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span style="color: var(--lcars-orange); font-weight: 700;">Progress:</span>
+          <span style="color: var(--lcars-white);">{{ mission.completedSteps }}/{{ mission.totalSteps }}</span>
+        </div>
+        <div style="background-color: var(--lcars-gray); height: 8px; border-radius: 4px; margin-bottom: 10px;">
+          <div style="background: linear-gradient(90deg, var(--lcars-green), var(--lcars-blue)); height: 100%; border-radius: 4px;"
+               [style.width.%]="mission.progress"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--lcars-tan); font-weight: 700;">{{ mission.pointsReward }} PTS</span>
+          <span class="lcars-button"
+                [class.success]="mission.difficulty === 'EASY'"
+                [class.info]="mission.difficulty === 'MEDIUM'"
+                [class.danger]="mission.difficulty === 'HARD'"
+                style="padding: 4px 12px; font-size: 0.8rem;">
+            {{ mission.difficulty }}
+          </span>
+        </div>
+      </div>
+    </div>
+    <ng-template #noMissions>
+      <div class="lcars-alert info">
+        <strong>No Active Missions</strong> - Check back later for new mission assignments.
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="lcars-panel" style="opacity: 1; transform: translateX(0px); transition: 0.5s;">
+    <div class="lcars-panel-header">
+      Recent Activity Log
+    </div>
+    <div *ngIf="recentActivity().length > 0; else noActivity">
+      <div *ngFor="let activity of recentActivity(); trackBy: trackByActivityId"
+           class="lcars-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="color: var(--lcars-orange); font-weight: 700; margin-bottom: 5px;">
+              {{ getActivityIcon(activity.type) }} {{ activity.description }}
+            </div>
+            <div style="font-size: 0.9rem; color: var(--lcars-light-gray);">
+              {{ activity.timestamp | date:'medium' }}
+            </div>
+          </div>
+          <div *ngIf="activity.points"
+               style="color: var(--lcars-green); font-weight: 700; font-size: 1.1rem;">
+            +{{ activity.points }} PTS
+          </div>
+        </div>
+      </div>
+    </div>
+    <ng-template #noActivity>
+      <div class="lcars-alert warning">
+        <strong>No Recent Activity</strong> - Start completing missions to see your progress here.
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Leaderboard Preview -->
+  <div class="lcars-panel" style="opacity: 1; transform: translateX(0px); transition: 0.5s;">
+    <div class="lcars-panel-header">
+      Leaderboard Preview
+    </div>
+    <div *ngIf="topLeaderboard().length > 0; else noLeaderboard">
+      <table class="lcars-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Officer Name</th>
+            <th>Points</th>
+            <th>Change</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of topLeaderboard(); trackBy: trackByLeaderboardRank"
+              [class.current-user]="entry.name === 'Commander Data'">
+            <td style="color: var(--lcars-orange); font-weight: 700;">#{{ entry.rank }}</td>
+            <td style="font-weight: 700;">{{ entry.name }}</td>
+            <td style="color: var(--lcars-green); font-weight: 700;">{{ entry.points | number }}</td>
+            <td>
+              <span *ngIf="entry.change !== 0"
+                    [style.color]="entry.change > 0 ? 'var(--lcars-green)' : 'var(--lcars-red)'"
+                    style="font-weight: 700;">
+                {{ entry.change > 0 ? '↑' : '↓' }}{{ abs(entry.change) }}
+              </span>
+              <span *ngIf="entry.change === 0" style="color: var(--lcars-light-gray);">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #noLeaderboard>
+      <div class="lcars-alert info">
+        <strong>Leaderboard Loading</strong> - Ranking data will appear here once available.
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="lcars-panel" style="opacity: 1; transform: translateX(0px); transition: 0.5s;">
+    <div class="lcars-panel-header">
+      Quick Actions
+    </div>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+      <button class="lcars-button success"
+              (click)="onLogAction()"
+              (mouseenter)="playHoverSound()">
+        Log Action
+      </button>
+      <button class="lcars-button info"
+              (click)="onViewMissions()"
+              (mouseenter)="playHoverSound()">
+        View Missions
+      </button>
+      <button class="lcars-button"
+              (click)="onViewLeaderboard()"
+              (mouseenter)="playHoverSound()">
+        Leaderboard
+      </button>
+      <button class="lcars-button danger"
+              (click)="onViewAnalytics()"
+              (mouseenter)="playHoverSound()">
+        Analytics
+      </button>
+    </div>
+  </div>
+
+  <!-- Welcome Message -->
+  <div class="lcars-alert info" style="margin-top: 20px;">
+    <strong>Welcome to Starfleet Gamifier</strong> - Your mission progress tracking system is active and ready for operation.
+    Use the navigation panel to access different system functions.
+  </div>
+</div>

@@ -1,0 +1,110 @@
+<!-- Proxima-style LCARS Layout -->
+<div class="lcars-container">
+  <!-- Header -->
+  <header class="lcars-header">
+    <h1 class="lcars-title">STARFLEET GAMIFIER</h1>
+    <span class="lcars-subtitle">GAMIFICATION MANAGEMENT SYSTEM</span>
+    <div style="margin-left: auto; display: flex; align-items: center;">
+      <span style="color: var(--lcars-black); margin-right: 10px;">SYSTEM STATUS:</span>
+      <div [class]="'lcars-status ' + connectionStatus()" [title]="'System Status: ' + connectionStatus().toUpperCase()"></div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="lcars-main">
+    <!-- Sidebar Navigation -->
+    <nav class="lcars-sidebar">
+      <a routerLink="/dashboard"
+         routerLinkActive="active"
+         class="lcars-nav-item"
+         (mouseenter)="playHoverSound()"
+         (click)="playClickSound()">
+        Dashboard
+      </a>
+      <a routerLink="/missions"
+         routerLinkActive="active"
+         class="lcars-nav-item"
+         (mouseenter)="playHoverSound()"
+         (click)="playClickSound()">
+        Missions
+      </a>
+      <a routerLink="/leaderboards"
+         routerLinkActive="active"
+         class="lcars-nav-item"
+         (mouseenter)="playHoverSound()"
+         (click)="playClickSound()">
+        Leaderboards
+      </a>
+      <a routerLink="/actions"
+         routerLinkActive="active"
+         class="lcars-nav-item"
+         (mouseenter)="playHoverSound()"
+         (click)="playClickSound()">
+        Actions
+      </a>
+
+      <!-- Admin Navigation -->
+      <div *ngIf="isAdmin" style="margin-top: 30px;">
+        <div style="color: var(--lcars-orange); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin: 15px 25px 10px; font-size: 0.8rem;">
+          Admin Functions
+        </div>
+        <a routerLink="/admin/users"
+           routerLinkActive="active"
+           class="lcars-nav-item"
+           (mouseenter)="playHoverSound()"
+           (click)="playClickSound()">
+          User Management
+        </a>
+        <a routerLink="/admin/organization"
+           routerLinkActive="active"
+           class="lcars-nav-item"
+           (mouseenter)="playHoverSound()"
+           (click)="playClickSound()">
+          Organization
+        </a>
+        <a routerLink="/admin/reports"
+           routerLinkActive="active"
+           class="lcars-nav-item"
+           (mouseenter)="playHoverSound()"
+           (click)="playClickSound()">
+          Reports
+        </a>
+      </div>
+
+      <!-- System Information -->
+      <div style="margin-top: 30px; padding: 15px; border-top: 1px solid var(--lcars-orange);">
+        <div style="color: var(--lcars-orange); font-weight: 700; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 10px;">
+          System Info
+        </div>
+        <div style="font-size: 0.8rem; color: var(--lcars-light-gray);">
+          <div>Version: 7.0.0</div>
+          <div>User: {{ currentUser()?.name || 'Guest' }}</div>
+          <div>Rank: {{ currentUser()?.rank || 'Unassigned' }}</div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content Area -->
+    <div class="lcars-content">
+      <!-- Alert Container -->
+      <div id="alert-container">
+        <div *ngFor="let notification of notifications(); trackBy: trackByNotificationId"
+             class="lcars-alert"
+             [class.success]="notification.type === 'success'"
+             [class.error]="notification.type === 'error'"
+             [class.warning]="notification.type === 'warning'"
+             [class.info]="notification.type === 'info'">
+          {{ notification.message }}
+        </div>
+      </div>
+
+      <!-- Page Content -->
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>
+
+<!-- Audio Element for LCARS sounds -->
+<audio #audioElement preload="metadata" style="display: none;">
+  Your browser does not support the audio element.
+</audio>

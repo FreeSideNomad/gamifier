@@ -26,8 +26,8 @@ export interface Notification {
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule],
-  templateUrl: './app.html',
-  styleUrls: ['./app.scss', './styles-improvements.scss']
+  templateUrl: './app-new.html',
+  styleUrls: ['./proxima-theme.scss']
 })
 export class App implements OnInit, OnDestroy {
   @ViewChild('audioElement') audioElement!: ElementRef<HTMLAudioElement>;

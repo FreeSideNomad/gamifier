@@ -36,8 +36,8 @@ export interface MissionPreview {
 @Component({
   selector: 'app-dashboard',
   imports: [CommonModule],
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss', '../../styles-improvements.scss']
+  templateUrl: './dashboard-new.html',
+  styleUrls: ['../../proxima-theme.scss']
 })
 export class DashboardComponent implements OnInit {
   private apiService = inject(ApiService);
