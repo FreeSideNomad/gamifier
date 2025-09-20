@@ -151,6 +151,14 @@ public class ActionService {
     }
 
     /**
+     * Get all actions for an organization.
+     */
+    public Page<Action> getOrganizationActions(String organizationId, Pageable pageable) {
+        authenticationService.requireOrganizationAccess(organizationId);
+        return actionCaptureRepository.findByOrganizationIdOrderByActionDateDesc(organizationId, pageable);
+    }
+
+    /**
      * Get action history for a user.
      */
     public Page<Action> getUserActionHistory(String userId, Pageable pageable) {

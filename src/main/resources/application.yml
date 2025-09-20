@@ -31,6 +31,8 @@ logging:
 
 starfleet:
   gamifier:
+    data-initialization:
+      enabled: false  # Set to false to disable default data initialization
     default-organization:
       name: "United Federation of Planets"
       federation-id: "UFP-001"
