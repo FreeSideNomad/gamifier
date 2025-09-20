@@ -1,17 +1,40 @@
-<!-- LCARS Main Application Layout -->
-<div class="lcars-app-container" (click)="onUserInteraction()">
+<!-- Multi-Theme Application Layout -->
+<div
+  [class]="isCorporateTheme() ? 'theme-corporate corporate-app-container' : 'lcars-app-container'"
+  (click)="onUserInteraction()">
   <!-- LCARS Header -->
   <header class="lcars-header">
     <div class="header-content">
       <h1 class="app-title">{{ appTitle }}</h1>
       <div class="header-controls">
-        <button class="lcars-button secondary" (click)="toggleAudio()">
+        <!-- Theme Switcher -->
+        <button
+          [class]="isCorporateTheme() ? 'btn-corporate btn-secondary' : 'lcars-button secondary'"
+          (click)="switchTheme()"
+          (mouseenter)="playHoverSound()">
+          @if (isStarfleetTheme()) {
+            🖖 Star Trek
+          } @else {
+            🏢 Corporate
+          }
+        </button>
+
+        <!-- Audio Toggle -->
+        <button
+          [class]="isCorporateTheme() ? 'btn-corporate btn-secondary' : 'lcars-button secondary'"
+          (click)="toggleAudio()"
+          [disabled]="!currentTheme().enableSounds">
           {{ audioEnabled() ? '🔊' : '🔇' }} Audio
         </button>
+
         <div class="user-info" *ngIf="currentUser()">
-          <span class="rank-badge lcars-badge rank">{{ currentUser()?.rank }}</span>
+          <span [class]="isCorporateTheme() ? 'badge-corporate badge-primary' : 'rank-badge lcars-badge rank'">
+            {{ currentUser()?.rank }}
+          </span>
           <span class="user-name">{{ currentUser()?.name }}</span>
-          <span class="points lcars-text-amber">{{ currentUser()?.points }} PTS</span>
+          <span [class]="isCorporateTheme() ? 'text-corporate text-primary' : 'points lcars-text-amber'">
+            {{ currentUser()?.points }} PTS
+          </span>
         </div>
       </div>
     </div>

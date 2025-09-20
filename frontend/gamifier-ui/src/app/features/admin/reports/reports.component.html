@@ -1,0 +1,436 @@
+<div class="reports-container">
+  <!-- Header -->
+  <div class="reports-header">
+    <h1 class="page-title">STARFLEET ANALYTICS</h1>
+    <div class="header-controls">
+      <button
+        class="btn-lcars refresh-btn"
+        (click)="refreshData()"
+        (mouseenter)="playHoverSound()"
+        [disabled]="isLoading()">
+        <span class="btn-text">REFRESH DATA</span>
+      </button>
+      <div class="timeframe-selector">
+        <label>TIMEFRAME:</label>
+        <select
+          class="lcars-select"
+          formControlName="timeframe"
+          (change)="applyFilters()">
+          @for (option of timeframeOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  @if (isLoading()) {
+    <div class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">PROCESSING DATA...</div>
+    </div>
+  }
+
+  <!-- Main Content -->
+  <div class="reports-content">
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+      @for (tab of ['overview', 'users', 'departments', 'missions', 'export']; track tab) {
+        <button
+          class="tab-btn"
+          [class.active]="currentTab() === tab"
+          (click)="switchTab(tab)"
+          (mouseenter)="playHoverSound()">
+          <span class="tab-text">{{ tab.toUpperCase() }}</span>
+        </button>
+      }
+    </div>
+
+    <!-- Filter Panel -->
+    <div class="filter-panel" [formGroup]="filterForm">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>DATE RANGE:</label>
+          <div class="date-inputs">
+            <input
+              type="date"
+              class="lcars-input"
+              formControlName="startDate"
+              placeholder="Start Date">
+            <span class="date-separator">TO</span>
+            <input
+              type="date"
+              class="lcars-input"
+              formControlName="endDate"
+              placeholder="End Date">
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label>DEPARTMENTS:</label>
+          <select
+            class="lcars-select"
+            formControlName="departments"
+            multiple>
+            @for (dept of availableDepartments; track dept) {
+              <option [value]="dept">{{ dept }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              formControlName="includeInactive">
+            <span class="checkmark"></span>
+            INCLUDE INACTIVE USERS
+          </label>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button
+          class="btn-lcars apply-btn"
+          (click)="applyFilters()"
+          (mouseenter)="playHoverSound()">
+          <span class="btn-text">APPLY FILTERS</span>
+        </button>
+        <button
+          class="btn-lcars reset-btn"
+          (click)="resetFilters()"
+          (mouseenter)="playHoverSound()">
+          <span class="btn-text">RESET</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Overview Tab -->
+      @if (currentTab() === 'overview' && reportData()) {
+        <div class="overview-content">
+          <!-- Key Metrics -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-header">USER ACTIVITY</div>
+              <div class="metric-value">{{ formatNumber(reportData()!.userActivity.activeUsers) }}</div>
+              <div class="metric-label">Active Users</div>
+              <div class="metric-subtext">
+                {{ formatNumber(reportData()!.userActivity.newUsersThisMonth) }} new this month
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">SYSTEM STATS</div>
+              <div class="metric-value">{{ formatNumber(reportData()!.systemStats.totalActions) }}</div>
+              <div class="metric-label">Total Actions</div>
+              <div class="metric-subtext">
+                {{ formatNumber(reportData()!.systemStats.actionsThisMonth) }} this month
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">MISSIONS</div>
+              <div class="metric-value">{{ formatNumber(reportData()!.systemStats.completedMissions) }}</div>
+              <div class="metric-label">Completed</div>
+              <div class="metric-subtext">
+                {{ formatNumber(reportData()!.systemStats.totalMissions) }} total missions
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">POINTS EARNED</div>
+              <div class="metric-value">{{ formatNumber(reportData()!.systemStats.totalPoints) }}</div>
+              <div class="metric-label">Total Points</div>
+              <div class="metric-subtext">
+                Avg: {{ formatNumber(reportData()!.userActivity.averagePointsPerUser) }} per user
+              </div>
+            </div>
+          </div>
+
+          <!-- Department Performance Chart -->
+          <div class="chart-section">
+            <h3 class="section-title">DEPARTMENT PERFORMANCE</h3>
+            <div class="chart-container">
+              <div class="chart-placeholder">
+                <div class="chart-title">Points by Department</div>
+                @for (dept of reportData()!.departmentPerformance; track dept.departmentName; let i = $index) {
+                  <div class="chart-bar" [style.background-color]="getDepartmentColor(i)">
+                    <div class="bar-label">{{ dept.departmentName }}</div>
+                    <div class="bar-value">{{ formatNumber(dept.totalPoints) }}</div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Activity Trend -->
+          <div class="chart-section">
+            <h3 class="section-title">USER ACTIVITY TREND</h3>
+            <div class="trend-chart">
+              @for (trend of reportData()!.userActivity.userActivityTrend.slice(-7); track trend.date) {
+                <div class="trend-day">
+                  <div class="trend-bar" [style.height.%]="(trend.activeUsers / 150) * 100"></div>
+                  <div class="trend-label">{{ trend.date.split('-')[2] }}</div>
+                  <div class="trend-value">{{ trend.activeUsers }}</div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Users Tab -->
+      @if (currentTab() === 'users' && reportData()) {
+        <div class="users-content">
+          <!-- Top Performers -->
+          <div class="section">
+            <h3 class="section-title">TOP PERFORMERS</h3>
+            <div class="performers-grid">
+              @for (user of reportData()!.userActivity.mostActiveUsers; track user.id) {
+                <div class="performer-card">
+                  <div class="performer-rank">#{{ $index + 1 }}</div>
+                  <div class="performer-name">{{ user.name }}</div>
+                  <div class="performer-stats">
+                    <div class="stat">
+                      <span class="stat-value">{{ formatNumber(user.pointsEarned) }}</span>
+                      <span class="stat-label">Points</span>
+                    </div>
+                    <div class="stat">
+                      <span class="stat-value">{{ user.actionsCount }}</span>
+                      <span class="stat-label">Actions</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- User Statistics -->
+          <div class="section">
+            <h3 class="section-title">USER STATISTICS</h3>
+            <div class="stats-table">
+              <div class="table-header">
+                <div class="header-cell">METRIC</div>
+                <div class="header-cell">VALUE</div>
+                <div class="header-cell">TREND</div>
+              </div>
+              <div class="table-row">
+                <div class="cell">Total Users</div>
+                <div class="cell">{{ formatNumber(reportData()!.userActivity.totalUsers) }}</div>
+                <div class="cell positive">↗ 5.2%</div>
+              </div>
+              <div class="table-row">
+                <div class="cell">Active Users</div>
+                <div class="cell">{{ formatNumber(reportData()!.userActivity.activeUsers) }}</div>
+                <div class="cell positive">↗ 3.1%</div>
+              </div>
+              <div class="table-row">
+                <div class="cell">New Users (Month)</div>
+                <div class="cell">{{ formatNumber(reportData()!.userActivity.newUsersThisMonth) }}</div>
+                <div class="cell positive">↗ 8.7%</div>
+              </div>
+              <div class="table-row">
+                <div class="cell">Avg Points/User</div>
+                <div class="cell">{{ formatNumber(reportData()!.userActivity.averagePointsPerUser) }}</div>
+                <div class="cell positive">↗ 2.4%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Departments Tab -->
+      @if (currentTab() === 'departments' && reportData()) {
+        <div class="departments-content">
+          <div class="section">
+            <h3 class="section-title">DEPARTMENT PERFORMANCE</h3>
+            <div class="departments-grid">
+              @for (dept of reportData()!.departmentPerformance; track dept.departmentName; let i = $index) {
+                <div class="department-card" [style.border-left-color]="getDepartmentColor(i)">
+                  <div class="dept-header">
+                    <h4 class="dept-name">{{ dept.departmentName }}</h4>
+                    <div class="dept-users">{{ dept.userCount }} Personnel</div>
+                  </div>
+
+                  <div class="dept-stats">
+                    <div class="dept-stat">
+                      <div class="stat-value">{{ formatNumber(dept.totalPoints) }}</div>
+                      <div class="stat-label">Total Points</div>
+                    </div>
+                    <div class="dept-stat">
+                      <div class="stat-value">{{ formatNumber(dept.averagePointsPerUser) }}</div>
+                      <div class="stat-label">Avg/User</div>
+                    </div>
+                    <div class="dept-stat">
+                      <div class="stat-value">{{ dept.completedMissions }}</div>
+                      <div class="stat-label">Missions</div>
+                    </div>
+                    <div class="dept-stat">
+                      <div class="stat-value">{{ dept.activeUsers }}</div>
+                      <div class="stat-label">Active</div>
+                    </div>
+                  </div>
+
+                  <div class="dept-footer">
+                    <div class="top-performer">
+                      Top Performer: <strong>{{ dept.topPerformer }}</strong>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Missions Tab -->
+      @if (currentTab() === 'missions' && reportData()) {
+        <div class="missions-content">
+          <div class="section">
+            <h3 class="section-title">MISSION PROGRESS</h3>
+            <div class="missions-table">
+              <div class="table-header">
+                <div class="header-cell">MISSION</div>
+                <div class="header-cell">ASSIGNED</div>
+                <div class="header-cell">COMPLETED</div>
+                <div class="header-cell">IN PROGRESS</div>
+                <div class="header-cell">COMPLETION RATE</div>
+                <div class="header-cell">AVG TIME</div>
+                <div class="header-cell">DIFFICULTY</div>
+              </div>
+              @for (mission of reportData()!.missionProgress; track mission.missionName) {
+                <div class="table-row">
+                  <div class="cell mission-name">{{ mission.missionName }}</div>
+                  <div class="cell">{{ mission.totalAssigned }}</div>
+                  <div class="cell">{{ mission.completed }}</div>
+                  <div class="cell">{{ mission.inProgress }}</div>
+                  <div class="cell">
+                    <div class="progress-bar">
+                      <div class="progress-fill" [style.width.%]="mission.completionRate"></div>
+                      <span class="progress-text">{{ formatPercentage(mission.completionRate) }}</span>
+                    </div>
+                  </div>
+                  <div class="cell">{{ mission.averageCompletionTime }}d</div>
+                  <div class="cell">
+                    <span class="difficulty-badge" [style.background-color]="getMissionDifficultyColor(mission.difficulty)">
+                      {{ mission.difficulty }}
+                    </span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Points Distribution -->
+          <div class="section">
+            <h3 class="section-title">POINTS DISTRIBUTION</h3>
+            <div class="points-distribution">
+              @for (actionType of reportData()!.pointsDistribution.byActionType; track actionType.actionType) {
+                <div class="distribution-item">
+                  <div class="distribution-header">
+                    <span class="action-type">{{ actionType.actionType }}</span>
+                    <span class="percentage">{{ formatPercentage(actionType.percentage) }}</span>
+                  </div>
+                  <div class="distribution-bar">
+                    <div class="bar-fill" [style.width.%]="actionType.percentage"></div>
+                  </div>
+                  <div class="distribution-details">
+                    <span>{{ formatNumber(actionType.totalPoints) }} points</span>
+                    <span>{{ actionType.actionCount }} actions</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Export Tab -->
+      @if (currentTab() === 'export') {
+        <div class="export-content">
+          <div class="section">
+            <h3 class="section-title">EXPORT REPORTS</h3>
+
+            <div class="export-options">
+              @for (format of exportFormats; track format.value) {
+                <div class="export-option">
+                  <div class="export-info">
+                    <h4 class="export-title">{{ format.label }}</h4>
+                    <p class="export-description">
+                      @switch (format.value) {
+                        @case ('pdf') {
+                          Comprehensive formatted report with charts and visualizations
+                        }
+                        @case ('excel') {
+                          Detailed spreadsheet with multiple worksheets and data analysis
+                        }
+                        @case ('csv') {
+                          Raw data export suitable for further analysis
+                        }
+                      }
+                    </p>
+                  </div>
+                  <button
+                    class="btn-lcars export-btn"
+                    (click)="exportReport(format.value)"
+                    (mouseenter)="playHoverSound()"
+                    [disabled]="isLoading()">
+                    <span class="btn-text">EXPORT {{ format.value.toUpperCase() }}</span>
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Export Settings -->
+            <div class="export-settings">
+              <h4 class="settings-title">EXPORT SETTINGS</h4>
+              <div class="settings-grid">
+                <label class="checkbox-label">
+                  <input type="checkbox" checked>
+                  <span class="checkmark"></span>
+                  Include User Details
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" checked>
+                  <span class="checkmark"></span>
+                  Include Department Data
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" checked>
+                  <span class="checkmark"></span>
+                  Include Mission Progress
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox">
+                  <span class="checkmark"></span>
+                  Include Inactive Users
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- System Status Footer -->
+  @if (reportData()) {
+    <div class="system-status">
+      <div class="status-item">
+        <span class="status-label">SYSTEM UPTIME:</span>
+        <span class="status-value">{{ reportData()!.systemStats.systemUptime }}</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">LAST UPDATE:</span>
+        <span class="status-value">{{ formatDateTime(reportData()!.systemStats.lastDataUpdate) }}</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">DATA INTEGRITY:</span>
+        <span class="status-value online">OPERATIONAL</span>
+      </div>
+    </div>
+  }
+</div>

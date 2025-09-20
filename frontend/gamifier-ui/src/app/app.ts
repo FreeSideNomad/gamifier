@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { interval, Subscription } from 'rxjs';
 import { AudioService } from './core/services/audio.service';
 import { ApiService } from './core/services/api.service';
+import { ThemeService } from './core/services/theme.service';
 import { environment } from '../environments/environment';
 
 export interface User {
@@ -34,11 +35,17 @@ export class App implements OnInit, OnDestroy {
 
   private audioService = inject(AudioService);
   private apiService = inject(ApiService);
+  private themeService = inject(ThemeService);
   private timeSubscription?: Subscription;
 
   // App Properties
-  appTitle = environment.appName;
+  appTitle = computed(() => this.themeService.getAppName());
   version = environment.version;
+
+  // Theme Properties
+  currentTheme = this.themeService.currentTheme;
+  isStarfleetTheme = computed(() => this.themeService.isStarfleetTheme());
+  isCorporateTheme = computed(() => this.themeService.isCorporateTheme());
 
   // User State
   currentUser = signal<User | null>(null);
@@ -46,7 +53,8 @@ export class App implements OnInit, OnDestroy {
 
   // UI State
   isLoading = signal(true);
-  audioEnabled = signal(environment.audio.enabled);
+  audioEnabledLocal = signal(environment.audio.enabled);
+  audioEnabled = computed(() => this.themeService.isFeatureEnabled('sounds') && this.audioEnabledLocal());
   connectionStatus = signal<'connected' | 'disconnected' | 'connecting'>('connecting');
 
   // System Status
@@ -114,22 +122,99 @@ export class App implements OnInit, OnDestroy {
   }
 
   private async loadCurrentUser(): Promise<void> {
-    try {
-      // Mock user data for now - will be replaced with real API call
+    if (!environment.mockData.enabled) {
+      try {
+        const response = await fetch(`${environment.apiUrl}/users/current`);
+
+        if (response.ok) {
+          const user = await response.json();
+          this.currentUser.set(user);
+          this.connectionStatus.set('connected');
+          return;
+        } else if (response.status === 404 || response.status === 500) {
+          // No user found or server error - try to create a default user
+          console.log('No current user found, creating default user...');
+          await this.createDefaultUser();
+          return;
+        } else {
+          throw new Error(`Failed to load user: ${response.status}`);
+        }
+      } catch (error) {
+        console.error('Failed to load user:', error);
+        this.connectionStatus.set('disconnected');
+        if (!environment.mockData.fallbackOnError) {
+          this.currentUser.set(null);
+          return;
+        }
+      }
+    }
+
+    // Mock data - only used if mock data is enabled or as fallback on error
+    if (environment.mockData.enabled || environment.mockData.fallbackOnError) {
       const mockUser: User = {
         id: 1,
-        name: 'Commander Data',
-        email: 'data@starfleet.gov',
-        rank: 'CMDR',
-        points: 2847,
+        name: 'Development User',
+        email: 'dev@example.com',
+        rank: 'DEV',
+        points: 0,
         role: 'ADMIN'
       };
-
       this.currentUser.set(mockUser);
       this.connectionStatus.set('connected');
+    }
+  }
+
+  private async createDefaultUser(): Promise<void> {
+    try {
+      // Create a default organization first
+      const orgResponse = await fetch(`${environment.apiUrl}/organizations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: 'default-org',
+          name: 'Default Organization',
+          description: 'Default organization for testing'
+        })
+      });
+
+      // Create default user
+      const userResponse = await fetch(`${environment.apiUrl}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: 'dev-user-001',
+          name: 'Development User',
+          email: 'dev@example.com',
+          role: 'ADMIN',
+          organizationId: 'default-org'
+        })
+      });
+
+      if (userResponse.ok) {
+        const user = await userResponse.json();
+        this.currentUser.set(user);
+        this.connectionStatus.set('connected');
+        console.log('Default user created successfully');
+      } else {
+        throw new Error('Failed to create default user');
+      }
     } catch (error) {
-      console.error('Failed to load user:', error);
-      this.connectionStatus.set('disconnected');
+      console.error('Failed to create default user:', error);
+      // Fall back to mock user
+      const mockUser: User = {
+        id: 1,
+        name: 'Development User',
+        email: 'dev@example.com',
+        rank: 'DEV',
+        points: 0,
+        role: 'ADMIN'
+      };
+      this.currentUser.set(mockUser);
+      this.connectionStatus.set('connected');
     }
   }
 
@@ -167,11 +252,11 @@ export class App implements OnInit, OnDestroy {
   }
 
   toggleAudio(): void {
-    const newState = !this.audioEnabled();
-    this.audioEnabled.set(newState);
-    this.audioService.setEnabled(newState);
+    const newState = !this.audioEnabledLocal();
+    this.audioEnabledLocal.set(newState);
+    this.audioService.setEnabled(newState && this.themeService.isFeatureEnabled('sounds'));
 
-    if (newState) {
+    if (newState && this.themeService.isFeatureEnabled('sounds')) {
       this.audioService.playSuccess();
     }
   }
@@ -182,6 +267,21 @@ export class App implements OnInit, OnDestroy {
 
   playClickSound(): void {
     this.audioService.playButtonClick();
+  }
+
+  // Theme Management
+  switchTheme(): void {
+    const currentTheme = this.themeService.getCurrentThemeName();
+    const newTheme = currentTheme === 'starfleet' ? 'corporate' : 'starfleet';
+    this.themeService.setTheme(newTheme);
+
+    if (this.audioEnabled()) {
+      this.audioService.playButtonClick();
+    }
+  }
+
+  getAvailableThemes() {
+    return this.themeService.getAvailableThemes();
   }
 
   // Notification Management
