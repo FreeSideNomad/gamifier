@@ -1,0 +1,486 @@
+<!-- LCARS Admin Users Management Interface -->
+<div class="lcars-admin-panel">
+
+  <!-- Header Section -->
+  <div class="lcars-panel-header">
+    <h1 class="lcars-title">USER MANAGEMENT</h1>
+    <div class="lcars-status-indicator" [class.connected]="!isLoading()">
+      {{ isLoading() ? 'UPDATING...' : 'ONLINE' }}
+    </div>
+  </div>
+
+  <!-- Stats Overview -->
+  <div class="lcars-stats-panel" *ngIf="userStats()">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{ userStats()?.totalUsers || 0 }}</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ userStats()?.activeUsers || 0 }}</div>
+        <div class="stat-label">Active Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ userStats()?.adminUsers || 0 }}</div>
+        <div class="stat-label">Administrators</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ userStats()?.newUsersThisMonth || 0 }}</div>
+        <div class="stat-label">New This Month</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="lcars-tab-navigation">
+    <button class="lcars-tab-button"
+            [class.active]="currentTab() === 'users'"
+            (click)="switchTab('users')"
+            (mouseenter)="playHoverSound()">
+      User Management
+    </button>
+    <button class="lcars-tab-button"
+            [class.active]="currentTab() === 'departments'"
+            (click)="switchTab('departments')"
+            (mouseenter)="playHoverSound()">
+      Departments
+    </button>
+    <button class="lcars-tab-button"
+            [class.active]="currentTab() === 'bulk-import'"
+            (click)="switchTab('bulk-import')"
+            (mouseenter)="playHoverSound()">
+      Bulk Import
+    </button>
+  </div>
+
+  <!-- Content Area -->
+  <div class="lcars-content-area">
+
+    <!-- Users Tab -->
+    <div class="lcars-tab-content" *ngIf="currentTab() === 'users'">
+
+      <!-- Filters and Search -->
+      <div class="lcars-filters-panel">
+        <div class="filters-grid">
+          <div class="filter-group">
+            <label class="lcars-label">Search Users</label>
+            <input class="lcars-input"
+                   type="text"
+                   placeholder="Search by name or email..."
+                   [value]="searchTerm()"
+                   (input)="updateSearchTerm($any($event.target).value)">
+          </div>
+
+          <div class="filter-group">
+            <label class="lcars-label">Department</label>
+            <select class="lcars-select"
+                    [value]="selectedDepartment()"
+                    (change)="updateDepartmentFilter($any($event.target).value)">
+              <option value="">All Departments</option>
+              <option *ngFor="let dept of departments()" [value]="dept.name">{{ dept.name }}</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="lcars-label">Role</label>
+            <select class="lcars-select"
+                    [value]="selectedRole()"
+                    (change)="updateRoleFilter($any($event.target).value)">
+              <option value="">All Roles</option>
+              <option value="USER">Users</option>
+              <option value="ADMIN">Administrators</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="lcars-label">Status</label>
+            <select class="lcars-select"
+                    [value]="selectedStatus()"
+                    (change)="updateStatusFilter($any($event.target).value)">
+              <option value="">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button class="lcars-button primary"
+                  (click)="openUserModal()"
+                  (mouseenter)="playHoverSound()">
+            Create New User
+          </button>
+        </div>
+      </div>
+
+      <!-- Users Data Grid -->
+      <div class="lcars-data-grid">
+        <div class="lcars-grid-header">
+          <div class="grid-col">User</div>
+          <div class="grid-col">Rank</div>
+          <div class="grid-col">Department</div>
+          <div class="grid-col">Points</div>
+          <div class="grid-col">Last Active</div>
+          <div class="grid-col">Status</div>
+          <div class="grid-col">Actions</div>
+        </div>
+
+        <div class="lcars-grid-row" *ngFor="let user of paginatedUsers; trackBy: trackByUserId">
+          <div class="grid-col">
+            <div class="user-info">
+              <div class="user-name">{{ user.name }}</div>
+              <div class="user-email">{{ user.email }}</div>
+              <div class="user-role" [class.admin]="user.role === 'ADMIN'">{{ user.role }}</div>
+            </div>
+          </div>
+          <div class="grid-col">
+            <span class="rank-display">{{ formatRank(user.rank) }}</span>
+          </div>
+          <div class="grid-col">
+            <span class="department-name">{{ user.department }}</span>
+            <div class="manager-info" *ngIf="user.managerId">
+              Manager: {{ getUserName(user.managerId) }}
+            </div>
+          </div>
+          <div class="grid-col">
+            <div class="points-info">
+              <div class="points-value">{{ user.points }} PTS</div>
+              <div class="missions-count">{{ user.completedMissions }} missions</div>
+            </div>
+          </div>
+          <div class="grid-col">
+            <span class="last-active">{{ formatLastActive(user.lastActive) }}</span>
+          </div>
+          <div class="grid-col">
+            <span class="lcars-status" [class.active]="user.isActive">
+              {{ user.isActive ? 'ACTIVE' : 'INACTIVE' }}
+            </span>
+          </div>
+          <div class="grid-col">
+            <div class="action-buttons">
+              <button class="lcars-button small secondary"
+                      (click)="openUserModal(user)"
+                      (mouseenter)="playHoverSound()">
+                Edit
+              </button>
+              <button class="lcars-button small"
+                      [class]="user.isActive ? 'warning' : 'success'"
+                      (click)="toggleUserStatus(user.id)"
+                      (mouseenter)="playHoverSound()">
+                {{ user.isActive ? 'Disable' : 'Enable' }}
+              </button>
+              <button class="lcars-button small secondary"
+                      (click)="resetUserPassword(user.id)"
+                      (mouseenter)="playHoverSound()">
+                Reset PWD
+              </button>
+              <button class="lcars-button small danger"
+                      (click)="deleteUser(user.id)"
+                      (mouseenter)="playHoverSound()">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="lcars-grid-empty" *ngIf="paginatedUsers.length === 0">
+          <div class="empty-message">
+            {{ filteredUsers.length === 0 ? 'No users found matching your filters.' : 'No users to display.' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="lcars-pagination" *ngIf="totalPages > 1">
+        <button class="lcars-button small secondary"
+                [disabled]="currentPage() === 1"
+                (click)="changePage(currentPage() - 1)"
+                (mouseenter)="playHoverSound()">
+          Previous
+        </button>
+
+        <div class="page-info">
+          Page {{ currentPage() }} of {{ totalPages }}
+          ({{ filteredUsers.length }} users)
+        </div>
+
+        <button class="lcars-button small secondary"
+                [disabled]="currentPage() === totalPages"
+                (click)="changePage(currentPage() + 1)"
+                (mouseenter)="playHoverSound()">
+          Next
+        </button>
+      </div>
+    </div>
+
+    <!-- Departments Tab -->
+    <div class="lcars-tab-content" *ngIf="currentTab() === 'departments'">
+
+      <div class="lcars-section-header">
+        <h3>Department Management</h3>
+        <button class="lcars-button primary"
+                (click)="openDepartmentModal()"
+                (mouseenter)="playHoverSound()">
+          Create New Department
+        </button>
+      </div>
+
+      <div class="departments-grid">
+        <div class="department-card" *ngFor="let dept of departments(); trackBy: trackByDepartmentId">
+          <div class="department-header">
+            <div class="department-name">{{ dept.name }}</div>
+            <div class="user-count">{{ dept.userCount }} users</div>
+          </div>
+
+          <div class="department-body">
+            <p class="department-description">{{ dept.description }}</p>
+            <div class="department-head" *ngIf="dept.headId">
+              <strong>Department Head:</strong> {{ getUserName(dept.headId) }}
+            </div>
+          </div>
+
+          <div class="department-actions">
+            <button class="lcars-button small secondary"
+                    (click)="openDepartmentModal(dept)"
+                    (mouseenter)="playHoverSound()">
+              Edit
+            </button>
+            <button class="lcars-button small danger"
+                    (click)="deleteDepartment(dept.id)"
+                    (mouseenter)="playHoverSound()">
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <div class="lcars-empty-state" *ngIf="departments().length === 0">
+          <div class="empty-message">No departments configured. Create your first department to get started.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Import Tab -->
+    <div class="lcars-tab-content" *ngIf="currentTab() === 'bulk-import'">
+
+      <div class="lcars-section-header">
+        <h3>Bulk User Import</h3>
+      </div>
+
+      <div class="bulk-import-panel">
+        <div class="import-instructions">
+          <h4>CSV File Format</h4>
+          <p>Your CSV file should contain the following columns:</p>
+          <ul>
+            <li><strong>name</strong> - Full name of the user</li>
+            <li><strong>email</strong> - Email address (must be unique)</li>
+            <li><strong>rank</strong> - User rank (CADET, ENSIGN, etc.)</li>
+            <li><strong>department</strong> - Department name</li>
+            <li><strong>role</strong> - USER or ADMIN</li>
+            <li><strong>managerId</strong> - (Optional) Email of the user's manager</li>
+          </ul>
+        </div>
+
+        <form [formGroup]="bulkImportForm" (ngSubmit)="processBulkImport()">
+          <div class="import-form">
+            <div class="lcars-form-group">
+              <label class="lcars-label" for="csvFile">CSV File *</label>
+              <input class="lcars-input"
+                     id="csvFile"
+                     type="file"
+                     accept=".csv"
+                     (change)="onFileSelected($event)">
+            </div>
+
+            <div class="lcars-checkbox-group">
+              <label class="lcars-checkbox">
+                <input type="checkbox" formControlName="overwriteExisting">
+                <span class="lcars-checkbox-mark"></span>
+                Overwrite existing users with same email
+              </label>
+
+              <label class="lcars-checkbox">
+                <input type="checkbox" formControlName="sendWelcomeEmails">
+                <span class="lcars-checkbox-mark"></span>
+                Send welcome emails to new users
+              </label>
+            </div>
+
+            <div class="import-actions">
+              <button type="submit"
+                      class="lcars-button primary"
+                      [disabled]="bulkImportForm.invalid || isLoading()"
+                      (mouseenter)="playHoverSound()">
+                {{ isLoading() ? 'Processing...' : 'Import Users' }}
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <div class="import-notes">
+          <h4>Important Notes</h4>
+          <ul>
+            <li>All imported users will receive temporary passwords</li>
+            <li>Users will be required to change their password on first login</li>
+            <li>Invalid entries will be skipped and reported</li>
+            <li>Maximum file size: 10MB</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- User Modal -->
+<div class="lcars-modal-overlay" *ngIf="showUserModal()" (click)="closeModal()">
+  <div class="lcars-modal" (click)="$event.stopPropagation()">
+    <div class="lcars-modal-header">
+      <h2 class="lcars-modal-title">{{ editingUser() ? 'EDIT USER' : 'CREATE USER' }}</h2>
+      <button class="lcars-close-button" (click)="closeModal()" (mouseenter)="playHoverSound()">✕</button>
+    </div>
+
+    <div class="lcars-modal-body">
+      <form [formGroup]="userForm" (ngSubmit)="saveUser()">
+
+        <div class="lcars-form-row">
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="userName">Full Name *</label>
+            <input class="lcars-input" id="userName" type="text" formControlName="name" placeholder="Enter full name">
+          </div>
+
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="userEmail">Email Address *</label>
+            <input class="lcars-input" id="userEmail" type="email" formControlName="email" placeholder="user@starfleet.fed">
+          </div>
+        </div>
+
+        <div class="lcars-form-row">
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="userRank">Rank *</label>
+            <select class="lcars-select" id="userRank" formControlName="rank">
+              <option *ngFor="let rank of availableRanks" [value]="rank">{{ formatRank(rank) }}</option>
+            </select>
+          </div>
+
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="userRole">Role *</label>
+            <select class="lcars-select" id="userRole" formControlName="role">
+              <option *ngFor="let role of availableRoles" [value]="role.value">{{ role.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="lcars-form-row">
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="userDepartment">Department *</label>
+            <select class="lcars-select" id="userDepartment" formControlName="department">
+              <option value="">Select Department</option>
+              <option *ngFor="let dept of departments()" [value]="dept.name">{{ dept.name }}</option>
+            </select>
+          </div>
+
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="userManager">Manager</label>
+            <select class="lcars-select" id="userManager" formControlName="managerId">
+              <option value="">No Manager</option>
+              <option *ngFor="let user of users()" [value]="user.id">{{ user.name }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="lcars-checkbox-group">
+          <label class="lcars-checkbox">
+            <input type="checkbox" formControlName="isActive">
+            <span class="lcars-checkbox-mark"></span>
+            Active (user can log in and access the system)
+          </label>
+        </div>
+
+        <div class="lcars-modal-actions">
+          <button type="button" class="lcars-button secondary" (click)="closeModal()" (mouseenter)="playHoverSound()">Cancel</button>
+          <button type="submit" class="lcars-button primary" [disabled]="userForm.invalid || isLoading()" (mouseenter)="playHoverSound()">
+            {{ isLoading() ? 'Saving...' : (editingUser() ? 'Update User' : 'Create User') }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Department Modal -->
+<div class="lcars-modal-overlay" *ngIf="showDepartmentModal()" (click)="closeModal()">
+  <div class="lcars-modal" (click)="$event.stopPropagation()">
+    <div class="lcars-modal-header">
+      <h2 class="lcars-modal-title">{{ editingDepartment() ? 'EDIT DEPARTMENT' : 'CREATE DEPARTMENT' }}</h2>
+      <button class="lcars-close-button" (click)="closeModal()" (mouseenter)="playHoverSound()">✕</button>
+    </div>
+
+    <div class="lcars-modal-body">
+      <form [formGroup]="departmentForm" (ngSubmit)="saveDepartment()">
+
+        <div class="lcars-form-group">
+          <label class="lcars-label" for="deptName">Department Name *</label>
+          <input class="lcars-input" id="deptName" type="text" formControlName="name" placeholder="Enter department name">
+        </div>
+
+        <div class="lcars-form-group">
+          <label class="lcars-label" for="deptDescription">Description *</label>
+          <textarea class="lcars-textarea" id="deptDescription" formControlName="description" rows="3" placeholder="Describe the department's role and responsibilities"></textarea>
+        </div>
+
+        <div class="lcars-form-group">
+          <label class="lcars-label" for="deptHead">Department Head</label>
+          <select class="lcars-select" id="deptHead" formControlName="headId">
+            <option value="">No Department Head</option>
+            <option *ngFor="let user of users()" [value]="user.id">{{ user.name }} ({{ formatRank(user.rank) }})</option>
+          </select>
+        </div>
+
+        <div class="lcars-modal-actions">
+          <button type="button" class="lcars-button secondary" (click)="closeModal()" (mouseenter)="playHoverSound()">Cancel</button>
+          <button type="submit" class="lcars-button primary" [disabled]="departmentForm.invalid || isLoading()" (mouseenter)="playHoverSound()">
+            {{ isLoading() ? 'Saving...' : (editingDepartment() ? 'Update Department' : 'Create Department') }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Import Modal -->
+<div class="lcars-modal-overlay" *ngIf="showBulkImportModal()" (click)="closeModal()">
+  <div class="lcars-modal large" (click)="$event.stopPropagation()">
+    <div class="lcars-modal-header">
+      <h2 class="lcars-modal-title">BULK USER IMPORT</h2>
+      <button class="lcars-close-button" (click)="closeModal()" (mouseenter)="playHoverSound()">✕</button>
+    </div>
+
+    <div class="lcars-modal-body">
+      <div class="import-preview" *ngIf="isLoading()">
+        <div class="loading-indicator">
+          <div class="loading-text">Processing import file...</div>
+          <div class="loading-progress">
+            <div class="progress-bar"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="import-form" *ngIf="!isLoading()">
+        <div class="sample-format">
+          <h4>Sample CSV Format:</h4>
+          <pre class="csv-sample">name,email,rank,department,role,managerId
+Jean-Luc Picard,picard@starfleet.fed,CAPTAIN,Command,ADMIN,
+William Riker,riker@starfleet.fed,COMMANDER,Command,USER,picard@starfleet.fed</pre>
+        </div>
+
+        <button class="lcars-button secondary"
+                (click)="closeModal()"
+                (mouseenter)="playHoverSound()">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
