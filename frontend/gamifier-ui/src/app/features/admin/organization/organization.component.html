@@ -1,0 +1,591 @@
+<!-- LCARS Admin Organization Management Interface -->
+<div class="lcars-admin-panel">
+
+  <!-- Header Section -->
+  <div class="lcars-panel-header">
+    <h1 class="lcars-title">ORGANIZATION CONFIGURATION</h1>
+    <div class="lcars-status-indicator" [class.connected]="!isLoading()">
+      {{ isLoading() ? 'UPDATING...' : 'ONLINE' }}
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="lcars-tab-navigation">
+    <button class="lcars-tab-button"
+            [class.active]="currentTab() === 'organization'"
+            (click)="switchTab('organization')"
+            (mouseenter)="playHoverSound()">
+      Organization Settings
+    </button>
+    <button class="lcars-tab-button"
+            [class.active]="currentTab() === 'actions'"
+            (click)="switchTab('actions')"
+            (mouseenter)="playHoverSound()">
+      Action Types
+    </button>
+    <button class="lcars-tab-button"
+            [class.active]="currentTab() === 'missions'"
+            (click)="switchTab('missions')"
+            (mouseenter)="playHoverSound()">
+      Mission Types
+    </button>
+    <button class="lcars-tab-button"
+            [class.active]="currentTab() === 'ranks'"
+            (click)="switchTab('ranks')"
+            (mouseenter)="playHoverSound()">
+      Rank Configuration
+    </button>
+  </div>
+
+  <!-- Content Area -->
+  <div class="lcars-content-area">
+
+    <!-- Organization Settings Tab -->
+    <div class="lcars-tab-content" *ngIf="currentTab() === 'organization'">
+      <form [formGroup]="organizationForm" (ngSubmit)="saveOrganization()">
+
+        <div class="lcars-panel">
+          <div class="lcars-panel-header">
+            <h3>Basic Information</h3>
+          </div>
+          <div class="lcars-panel-body">
+
+            <div class="lcars-form-row">
+              <div class="lcars-form-group">
+                <label class="lcars-label" for="orgName">Organization Name *</label>
+                <input class="lcars-input"
+                       id="orgName"
+                       type="text"
+                       formControlName="name"
+                       placeholder="Enter organization name">
+                <div class="lcars-validation-error"
+                     *ngIf="organizationForm.get('name')?.invalid && organizationForm.get('name')?.touched">
+                  Organization name is required (minimum 3 characters)
+                </div>
+              </div>
+
+              <div class="lcars-form-group">
+                <label class="lcars-label" for="orgDomain">Domain *</label>
+                <input class="lcars-input"
+                       id="orgDomain"
+                       type="text"
+                       formControlName="domain"
+                       placeholder="example.com">
+                <div class="lcars-validation-error"
+                     *ngIf="organizationForm.get('domain')?.invalid && organizationForm.get('domain')?.touched">
+                  Valid domain is required
+                </div>
+              </div>
+            </div>
+
+            <div class="lcars-form-group">
+              <label class="lcars-label" for="orgDescription">Description *</label>
+              <textarea class="lcars-textarea"
+                        id="orgDescription"
+                        formControlName="description"
+                        rows="3"
+                        placeholder="Describe your organization's mission and purpose"></textarea>
+              <div class="lcars-validation-error"
+                   *ngIf="organizationForm.get('description')?.invalid && organizationForm.get('description')?.touched">
+                Description is required
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lcars-panel">
+          <div class="lcars-panel-header">
+            <h3>System Configuration</h3>
+          </div>
+          <div class="lcars-panel-body">
+
+            <div class="lcars-form-row">
+              <div class="lcars-form-group">
+                <label class="lcars-label" for="pointsPerAction">Default Points Per Action</label>
+                <input class="lcars-input"
+                       id="pointsPerAction"
+                       type="number"
+                       formControlName="pointsPerAction"
+                       min="1">
+              </div>
+            </div>
+
+            <div class="lcars-checkbox-group">
+              <label class="lcars-checkbox">
+                <input type="checkbox" formControlName="requireApproval">
+                <span class="lcars-checkbox-mark"></span>
+                Require manager approval for actions
+              </label>
+
+              <label class="lcars-checkbox">
+                <input type="checkbox" formControlName="allowSelfReporting">
+                <span class="lcars-checkbox-mark"></span>
+                Allow self-reporting of actions
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="lcars-panel">
+          <div class="lcars-panel-header">
+            <h3>Notification Settings</h3>
+          </div>
+          <div class="lcars-panel-body">
+
+            <div class="lcars-form-group">
+              <label class="lcars-label">Notification Email Addresses</label>
+              <div class="lcars-email-list">
+                <div class="lcars-email-item" *ngFor="let email of notificationEmails.controls; let i = index">
+                  <input class="lcars-input"
+                         type="email"
+                         [formControl]="$any(email)"
+                         placeholder="admin@example.com">
+                  <button type="button"
+                          class="lcars-button danger small"
+                          (click)="removeEmail(i)"
+                          (mouseenter)="playHoverSound()">
+                    Remove
+                  </button>
+                </div>
+                <button type="button"
+                        class="lcars-button secondary"
+                        (click)="addEmail()"
+                        (mouseenter)="playHoverSound()">
+                  Add Email Address
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lcars-form-actions">
+          <button type="submit"
+                  class="lcars-button primary"
+                  [disabled]="organizationForm.invalid || isLoading()"
+                  (mouseenter)="playHoverSound()">
+            {{ isLoading() ? 'Saving...' : 'Save Organization' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Action Types Tab -->
+    <div class="lcars-tab-content" *ngIf="currentTab() === 'actions'">
+
+      <div class="lcars-section-header">
+        <h3>Action Type Management</h3>
+        <button class="lcars-button primary"
+                (click)="openActionModal()"
+                (mouseenter)="playHoverSound()">
+          Create New Action Type
+        </button>
+      </div>
+
+      <div class="lcars-data-grid">
+        <div class="lcars-grid-header">
+          <div class="grid-col">Name</div>
+          <div class="grid-col">Category</div>
+          <div class="grid-col">Points</div>
+          <div class="grid-col">Approval Required</div>
+          <div class="grid-col">Status</div>
+          <div class="grid-col">Actions</div>
+        </div>
+
+        <div class="lcars-grid-row" *ngFor="let action of actionTypes(); trackBy: trackByActionId">
+          <div class="grid-col">
+            <div class="action-name">{{ action.name }}</div>
+            <div class="action-description">{{ action.description }}</div>
+          </div>
+          <div class="grid-col">
+            <span class="lcars-badge category">{{ action.category }}</span>
+          </div>
+          <div class="grid-col">
+            <span class="points-display">{{ action.points }} PTS</span>
+          </div>
+          <div class="grid-col">
+            <span class="lcars-indicator" [class.active]="action.requiresApproval">
+              {{ action.requiresApproval ? 'YES' : 'NO' }}
+            </span>
+          </div>
+          <div class="grid-col">
+            <span class="lcars-status" [class.active]="action.isActive">
+              {{ action.isActive ? 'ACTIVE' : 'DISABLED' }}
+            </span>
+          </div>
+          <div class="grid-col">
+            <div class="action-buttons">
+              <button class="lcars-button small secondary"
+                      (click)="openActionModal(action)"
+                      (mouseenter)="playHoverSound()">
+                Edit
+              </button>
+              <button class="lcars-button small danger"
+                      (click)="deleteAction(action.id)"
+                      (mouseenter)="playHoverSound()">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="lcars-grid-empty" *ngIf="actionTypes().length === 0">
+          <div class="empty-message">No action types configured. Create your first action type to get started.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mission Types Tab -->
+    <div class="lcars-tab-content" *ngIf="currentTab() === 'missions'">
+
+      <div class="lcars-section-header">
+        <h3>Mission Type Management</h3>
+        <button class="lcars-button primary"
+                (click)="openMissionModal()"
+                (mouseenter)="playHoverSound()">
+          Create New Mission Type
+        </button>
+      </div>
+
+      <div class="lcars-mission-grid">
+        <div class="lcars-mission-card" *ngFor="let mission of missionTypes(); trackBy: trackByMissionId">
+          <div class="mission-header">
+            <div class="mission-title">{{ mission.name }}</div>
+            <div class="mission-difficulty">{{ mission.difficulty }}</div>
+          </div>
+
+          <div class="mission-body">
+            <p class="mission-description">{{ mission.description }}</p>
+
+            <div class="mission-requirements">
+              <h4>Requirements:</h4>
+              <ul>
+                <li *ngFor="let req of mission.requirements">
+                  {{ req.description }} ({{ getActionTypeName(req.actionTypeId) }} × {{ req.requiredCount }})
+                </li>
+              </ul>
+            </div>
+
+            <div class="mission-reward">
+              <span class="reward-label">Reward:</span>
+              <span class="reward-points">{{ mission.rewardPoints }} PTS</span>
+            </div>
+          </div>
+
+          <div class="mission-actions">
+            <span class="lcars-status" [class.active]="mission.isActive">
+              {{ mission.isActive ? 'ACTIVE' : 'DISABLED' }}
+            </span>
+            <button class="lcars-button small secondary"
+                    (click)="openMissionModal(mission)"
+                    (mouseenter)="playHoverSound()">
+              Edit
+            </button>
+            <button class="lcars-button small danger"
+                    (click)="deleteMission(mission.id)"
+                    (mouseenter)="playHoverSound()">
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <div class="lcars-empty-state" *ngIf="missionTypes().length === 0">
+          <div class="empty-message">No mission types configured. Create your first mission to get started.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ranks Tab -->
+    <div class="lcars-tab-content" *ngIf="currentTab() === 'ranks'">
+
+      <div class="lcars-section-header">
+        <h3>Rank Configuration</h3>
+        <button class="lcars-button primary"
+                (click)="openRankModal()"
+                (mouseenter)="playHoverSound()">
+          Create New Rank
+        </button>
+      </div>
+
+      <div class="lcars-rank-hierarchy">
+        <div class="lcars-rank-card" *ngFor="let rank of ranks(); trackBy: trackByRankId">
+          <div class="rank-header">
+            <div class="rank-insignia" [style.color]="rank.color">{{ rank.insignia }}</div>
+            <div class="rank-info">
+              <div class="rank-name">{{ rank.name }}</div>
+              <div class="rank-points">{{ rank.minPoints }} - {{ rank.maxPoints }} Points</div>
+            </div>
+            <div class="rank-order">Order: {{ rank.order }}</div>
+          </div>
+
+          <div class="rank-benefits" *ngIf="rank.benefits.length > 0">
+            <h4>Benefits:</h4>
+            <ul>
+              <li *ngFor="let benefit of rank.benefits">{{ benefit }}</li>
+            </ul>
+          </div>
+
+          <div class="rank-actions">
+            <button class="lcars-button small secondary"
+                    (click)="openRankModal(rank)"
+                    (mouseenter)="playHoverSound()">
+              Edit
+            </button>
+            <button class="lcars-button small danger"
+                    (click)="deleteRank(rank.id)"
+                    (mouseenter)="playHoverSound()">
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <div class="lcars-empty-state" *ngIf="ranks().length === 0">
+          <div class="empty-message">No ranks configured. Create your first rank to establish the hierarchy.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Action Type Modal -->
+<div class="lcars-modal-overlay" *ngIf="showActionModal()" (click)="closeModal()">
+  <div class="lcars-modal" (click)="$event.stopPropagation()">
+    <div class="lcars-modal-header">
+      <h2 class="lcars-modal-title">{{ editingItem() ? 'EDIT ACTION TYPE' : 'CREATE ACTION TYPE' }}</h2>
+      <button class="lcars-close-button" (click)="closeModal()" (mouseenter)="playHoverSound()">✕</button>
+    </div>
+
+    <div class="lcars-modal-body">
+      <form [formGroup]="actionForm" (ngSubmit)="saveAction()">
+
+        <div class="lcars-form-row">
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="actionName">Action Name *</label>
+            <input class="lcars-input" id="actionName" type="text" formControlName="name" placeholder="Enter action name">
+          </div>
+
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="actionCategory">Category *</label>
+            <select class="lcars-select" id="actionCategory" formControlName="category">
+              <option value="">Select Category</option>
+              <option *ngFor="let category of actionCategories" [value]="category">{{ category }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="lcars-form-group">
+          <label class="lcars-label" for="actionDescription">Description *</label>
+          <textarea class="lcars-textarea" id="actionDescription" formControlName="description" rows="3" placeholder="Describe what this action involves"></textarea>
+        </div>
+
+        <div class="lcars-form-row">
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="actionPoints">Points *</label>
+            <input class="lcars-input" id="actionPoints" type="number" formControlName="points" min="1">
+          </div>
+        </div>
+
+        <div class="lcars-checkbox-group">
+          <label class="lcars-checkbox">
+            <input type="checkbox" formControlName="requiresApproval">
+            <span class="lcars-checkbox-mark"></span>
+            Requires manager approval
+          </label>
+
+          <label class="lcars-checkbox">
+            <input type="checkbox" formControlName="isActive">
+            <span class="lcars-checkbox-mark"></span>
+            Active (available for selection)
+          </label>
+        </div>
+
+        <div class="lcars-modal-actions">
+          <button type="button" class="lcars-button secondary" (click)="closeModal()" (mouseenter)="playHoverSound()">Cancel</button>
+          <button type="submit" class="lcars-button primary" [disabled]="actionForm.invalid || isLoading()" (mouseenter)="playHoverSound()">
+            {{ isLoading() ? 'Saving...' : (editingItem() ? 'Update' : 'Create') }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Mission Type Modal -->
+<div class="lcars-modal-overlay" *ngIf="showMissionModal()" (click)="closeModal()">
+  <div class="lcars-modal large" (click)="$event.stopPropagation()">
+    <div class="lcars-modal-header">
+      <h2 class="lcars-modal-title">{{ editingItem() ? 'EDIT MISSION TYPE' : 'CREATE MISSION TYPE' }}</h2>
+      <button class="lcars-close-button" (click)="closeModal()" (mouseenter)="playHoverSound()">✕</button>
+    </div>
+
+    <div class="lcars-modal-body">
+      <form [formGroup]="missionForm" (ngSubmit)="saveMission()">
+
+        <div class="lcars-form-row">
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="missionName">Mission Name *</label>
+            <input class="lcars-input" id="missionName" type="text" formControlName="name" placeholder="Enter mission name">
+          </div>
+
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="missionDifficulty">Difficulty *</label>
+            <select class="lcars-select" id="missionDifficulty" formControlName="difficulty">
+              <option *ngFor="let diff of missionDifficulties" [value]="diff.value">{{ diff.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="lcars-form-group">
+          <label class="lcars-label" for="missionDescription">Description *</label>
+          <textarea class="lcars-textarea" id="missionDescription" formControlName="description" rows="3" placeholder="Describe the mission objectives"></textarea>
+        </div>
+
+        <div class="lcars-form-row">
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="missionReward">Reward Points *</label>
+            <input class="lcars-input" id="missionReward" type="number" formControlName="rewardPoints" min="1">
+          </div>
+
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="missionBadge">Badge Icon</label>
+            <input class="lcars-input" id="missionBadge" type="text" formControlName="badgeIcon" placeholder="star">
+          </div>
+        </div>
+
+        <div class="lcars-form-section">
+          <div class="lcars-section-header">
+            <h4>Mission Requirements</h4>
+            <button type="button" class="lcars-button small primary" (click)="addMissionRequirement()" (mouseenter)="playHoverSound()">
+              Add Requirement
+            </button>
+          </div>
+
+          <div class="mission-requirements-list" formArrayName="requirements">
+            <div class="requirement-item" *ngFor="let req of missionRequirements.controls; let i = index" [formGroupName]="i">
+              <div class="lcars-form-row">
+                <div class="lcars-form-group">
+                  <label class="lcars-label">Action Type *</label>
+                  <select class="lcars-select" formControlName="actionTypeId">
+                    <option value="">Select Action Type</option>
+                    <option *ngFor="let action of actionTypes()" [value]="action.id">{{ action.name }}</option>
+                  </select>
+                </div>
+
+                <div class="lcars-form-group">
+                  <label class="lcars-label">Required Count *</label>
+                  <input class="lcars-input" type="number" formControlName="requiredCount" min="1">
+                </div>
+
+                <div class="lcars-form-group">
+                  <button type="button" class="lcars-button small danger" (click)="removeMissionRequirement(i)" (mouseenter)="playHoverSound()">
+                    Remove
+                  </button>
+                </div>
+              </div>
+
+              <div class="lcars-form-group">
+                <label class="lcars-label">Description *</label>
+                <input class="lcars-input" type="text" formControlName="description" placeholder="Describe this requirement">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lcars-checkbox-group">
+          <label class="lcars-checkbox">
+            <input type="checkbox" formControlName="isActive">
+            <span class="lcars-checkbox-mark"></span>
+            Active (available for assignment)
+          </label>
+        </div>
+
+        <div class="lcars-modal-actions">
+          <button type="button" class="lcars-button secondary" (click)="closeModal()" (mouseenter)="playHoverSound()">Cancel</button>
+          <button type="submit" class="lcars-button primary" [disabled]="missionForm.invalid || isLoading()" (mouseenter)="playHoverSound()">
+            {{ isLoading() ? 'Saving...' : (editingItem() ? 'Update' : 'Create') }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Rank Modal -->
+<div class="lcars-modal-overlay" *ngIf="showRankModal()" (click)="closeModal()">
+  <div class="lcars-modal" (click)="$event.stopPropagation()">
+    <div class="lcars-modal-header">
+      <h2 class="lcars-modal-title">{{ editingItem() ? 'EDIT RANK' : 'CREATE RANK' }}</h2>
+      <button class="lcars-close-button" (click)="closeModal()" (mouseenter)="playHoverSound()">✕</button>
+    </div>
+
+    <div class="lcars-modal-body">
+      <form [formGroup]="rankForm" (ngSubmit)="saveRank()">
+
+        <div class="lcars-form-row">
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="rankName">Rank Name *</label>
+            <input class="lcars-input" id="rankName" type="text" formControlName="name" placeholder="Enter rank name">
+          </div>
+
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="rankOrder">Order *</label>
+            <input class="lcars-input" id="rankOrder" type="number" formControlName="order" min="0">
+          </div>
+        </div>
+
+        <div class="lcars-form-row">
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="rankMinPoints">Minimum Points *</label>
+            <input class="lcars-input" id="rankMinPoints" type="number" formControlName="minPoints" min="0">
+          </div>
+
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="rankMaxPoints">Maximum Points *</label>
+            <input class="lcars-input" id="rankMaxPoints" type="number" formControlName="maxPoints" min="0">
+          </div>
+        </div>
+
+        <div class="lcars-form-row">
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="rankInsignia">Insignia</label>
+            <input class="lcars-input" id="rankInsignia" type="text" formControlName="insignia" placeholder="●">
+          </div>
+
+          <div class="lcars-form-group">
+            <label class="lcars-label" for="rankColor">Color *</label>
+            <input class="lcars-input" id="rankColor" type="color" formControlName="color">
+          </div>
+        </div>
+
+        <div class="lcars-form-section">
+          <div class="lcars-section-header">
+            <h4>Rank Benefits</h4>
+            <button type="button" class="lcars-button small primary" (click)="addRankBenefit()" (mouseenter)="playHoverSound()">
+              Add Benefit
+            </button>
+          </div>
+
+          <div class="rank-benefits-list" formArrayName="benefits">
+            <div class="benefit-item" *ngFor="let benefit of rankBenefits.controls; let i = index">
+              <input class="lcars-input" type="text" [formControl]="$any(benefit)" placeholder="Enter benefit description">
+              <button type="button" class="lcars-button small danger" (click)="removeRankBenefit(i)" (mouseenter)="playHoverSound()">
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="lcars-modal-actions">
+          <button type="button" class="lcars-button secondary" (click)="closeModal()" (mouseenter)="playHoverSound()">Cancel</button>
+          <button type="submit" class="lcars-button primary" [disabled]="rankForm.invalid || isLoading()" (mouseenter)="playHoverSound()">
+            {{ isLoading() ? 'Saving...' : (editingItem() ? 'Update' : 'Create') }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
