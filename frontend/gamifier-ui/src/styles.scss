@@ -1,5 +1,10 @@
-// LCARS Theme Global Styles
-// Star Trek LCARS (Library Computer Access/Retrieval System) inspired theme
+// Multi-Theme Global Styles
+// Supports both LCARS (Star Trek) and Corporate themes
+
+// Import corporate theme styles
+@import './app/shared/styles/corporate-theme.scss';
+
+// LCARS Theme (Star Trek LCARS - Library Computer Access/Retrieval System) inspired theme
 
 // LCARS Color Palette
 :root {

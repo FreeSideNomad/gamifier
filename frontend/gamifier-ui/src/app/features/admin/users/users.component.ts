@@ -131,144 +131,54 @@ export class UsersComponent implements OnInit {
   }
 
   private async loadUsers(): Promise<void> {
-    // Mock user data
-    const mockUsers: User[] = [
-      {
-        id: '1',
-        name: 'Jean-Luc Picard',
-        email: 'picard@starfleet.fed',
-        rank: 'CAPTAIN',
-        points: 15420,
-        role: 'ADMIN',
-        department: 'Command',
-        joinDate: new Date('2024-01-15'),
-        lastActive: new Date(),
-        isActive: true,
-        completedMissions: 89,
-        pendingActions: 2
-      },
-      {
-        id: '2',
-        name: 'William T. Riker',
-        email: 'riker@starfleet.fed',
-        rank: 'COMMANDER',
-        points: 12350,
-        role: 'USER',
-        department: 'Command',
-        joinDate: new Date('2024-02-01'),
-        lastActive: new Date(Date.now() - 86400000), // 1 day ago
-        isActive: true,
-        managerId: '1',
-        completedMissions: 67,
-        pendingActions: 5
-      },
-      {
-        id: '3',
-        name: 'Data',
-        email: 'data@starfleet.fed',
-        rank: 'LIEUTENANT_COMMANDER',
-        points: 11890,
-        role: 'USER',
-        department: 'Operations',
-        joinDate: new Date('2024-01-20'),
-        lastActive: new Date(Date.now() - 3600000), // 1 hour ago
-        isActive: true,
-        completedMissions: 72,
-        pendingActions: 1
-      },
-      {
-        id: '4',
-        name: 'Geordi La Forge',
-        email: 'laforge@starfleet.fed',
-        rank: 'LIEUTENANT_COMMANDER',
-        points: 9875,
-        role: 'USER',
-        department: 'Engineering',
-        joinDate: new Date('2024-02-10'),
-        lastActive: new Date(Date.now() - 7200000), // 2 hours ago
-        isActive: true,
-        completedMissions: 54,
-        pendingActions: 3
-      },
-      {
-        id: '5',
-        name: 'Deanna Troi',
-        email: 'troi@starfleet.fed',
-        rank: 'LIEUTENANT_COMMANDER',
-        points: 8234,
-        role: 'USER',
-        department: 'Medical',
-        joinDate: new Date('2024-03-01'),
-        lastActive: new Date(Date.now() - 172800000), // 2 days ago
-        isActive: false,
-        completedMissions: 45,
-        pendingActions: 0
+    try {
+      const response = await fetch('http://localhost:9080/api/users');
+      if (response.ok) {
+        const data = await response.json();
+        this.users.set(data);
+        this.totalUsers.set(data.length);
+      } else {
+        console.error('Failed to load users:', response.status);
+        this.users.set([]);
+        this.totalUsers.set(0);
       }
-    ];
-
-    this.users.set(mockUsers);
-    this.totalUsers.set(mockUsers.length);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+      this.users.set([]);
+      this.totalUsers.set(0);
+    }
   }
 
   private async loadDepartments(): Promise<void> {
-    // Mock department data
-    const mockDepartments: Department[] = [
-      {
-        id: '1',
-        name: 'Command',
-        description: 'Ship command and strategic operations',
-        headId: '1',
-        userCount: 2
-      },
-      {
-        id: '2',
-        name: 'Operations',
-        description: 'Operations and tactical systems',
-        headId: '3',
-        userCount: 1
-      },
-      {
-        id: '3',
-        name: 'Engineering',
-        description: 'Engineering and technical systems',
-        headId: '4',
-        userCount: 1
-      },
-      {
-        id: '4',
-        name: 'Medical',
-        description: 'Medical and counseling services',
-        userCount: 1
-      },
-      {
-        id: '5',
-        name: 'Security',
-        description: 'Security and tactical operations',
-        userCount: 0
+    try {
+      const response = await fetch('http://localhost:9080/api/departments');
+      if (response.ok) {
+        const data = await response.json();
+        this.departments.set(data);
+      } else {
+        console.error('Failed to load departments:', response.status);
+        this.departments.set([]);
       }
-    ];
-
-    this.departments.set(mockDepartments);
+    } catch (error) {
+      console.error('Failed to load departments:', error);
+      this.departments.set([]);
+    }
   }
 
   private async loadUserStats(): Promise<void> {
-    const users = this.users();
-    const stats: UserStats = {
-      totalUsers: users.length,
-      activeUsers: users.filter(u => u.isActive).length,
-      adminUsers: users.filter(u => u.role === 'ADMIN').length,
-      newUsersThisMonth: users.filter(u => {
-        const monthAgo = new Date();
-        monthAgo.setMonth(monthAgo.getMonth() - 1);
-        return u.joinDate > monthAgo;
-      }).length,
-      topPerformers: users
-        .filter(u => u.isActive)
-        .sort((a, b) => b.points - a.points)
-        .slice(0, 5)
-    };
-
-    this.userStats.set(stats);
+    try {
+      const response = await fetch('http://localhost:9080/api/users/stats');
+      if (response.ok) {
+        const data = await response.json();
+        this.userStats.set(data);
+      } else {
+        console.error('Failed to load user stats:', response.status);
+        this.userStats.set(null);
+      }
+    } catch (error) {
+      console.error('Failed to load user stats:', error);
+      this.userStats.set(null);
+    }
   }
 
   // Tab navigation

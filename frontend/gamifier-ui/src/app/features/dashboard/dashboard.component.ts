@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 import { AudioService } from '../../core/services/audio.service';
 import { ActionCaptureComponent, ActionCapture } from '../action-capture/action-capture';
+import { environment } from '../../../environments/environment';
 
 export interface DashboardStats {
   totalPoints: number;
@@ -95,109 +96,188 @@ export class DashboardComponent implements OnInit {
   }
 
   private async loadUserStats(): Promise<void> {
-    // Mock data - replace with API call
-    const mockStats: DashboardStats = {
-      totalPoints: 2847,
-      rank: 'COMMANDER',
-      missionsCompleted: 15,
-      activeMissions: 3,
-      leaderboardPosition: 7,
-      weeklyProgress: 68
-    };
+    if (!environment.mockData.enabled) {
+      try {
+        // Try to load real data from API
+        const response = await fetch(`${environment.apiUrl}/users/dashboard`);
+        if (response.ok) {
+          const stats = await response.json();
+          this.stats.set(stats);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to load user stats:', error);
+        if (!environment.mockData.fallbackOnError) {
+          return; // Don't show any data if API fails and fallback is disabled
+        }
+      }
+    }
 
-    this.stats.set(mockStats);
+    // Mock data - only used if mock data is enabled or as fallback on error
+    if (environment.mockData.enabled || environment.mockData.fallbackOnError) {
+      const mockStats: DashboardStats = {
+        totalPoints: 2847,
+        rank: 'COMMANDER',
+        missionsCompleted: 15,
+        activeMissions: 3,
+        leaderboardPosition: 7,
+        weeklyProgress: 68
+      };
+
+      this.stats.set(mockStats);
+    }
   }
 
   private async loadRecentActivity(): Promise<void> {
-    // Mock data - replace with API call
-    const mockActivity: RecentActivity[] = [
-      {
-        id: '1',
-        type: 'MISSION_COMPLETED',
-        description: 'Completed "Data Analysis Protocol"',
-        points: 150,
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        icon: '🎯'
-      },
-      {
-        id: '2',
-        type: 'POINTS_EARNED',
-        description: 'Code review contribution',
-        points: 25,
-        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-        icon: '⭐'
-      },
-      {
-        id: '3',
-        type: 'ACTION_LOGGED',
-        description: 'Logged daily standup attendance',
-        points: 10,
-        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-        icon: '📝'
-      },
-      {
-        id: '4',
-        type: 'RANK_PROMOTION',
-        description: 'Promoted to Commander',
-        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        icon: '🏆'
+    if (!environment.mockData.enabled) {
+      try {
+        // Try to load real data from API
+        const response = await fetch(`${environment.apiUrl}/events/feed`);
+        if (response.ok) {
+          const activities = await response.json();
+          this.recentActivity.set(activities);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to load recent activity:', error);
+        if (!environment.mockData.fallbackOnError) {
+          this.recentActivity.set([]);
+          return;
+        }
       }
-    ];
+    }
 
-    this.recentActivity.set(mockActivity);
+    // Mock data - only used if mock data is enabled or as fallback on error
+    if (environment.mockData.enabled || environment.mockData.fallbackOnError) {
+      const mockActivity: RecentActivity[] = [
+        {
+          id: '1',
+          type: 'MISSION_COMPLETED',
+          description: 'Completed "Data Analysis Protocol"',
+          points: 150,
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+          icon: '🎯'
+        },
+        {
+          id: '2',
+          type: 'POINTS_EARNED',
+          description: 'Code review contribution',
+          points: 25,
+          timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
+          icon: '⭐'
+        },
+        {
+          id: '3',
+          type: 'ACTION_LOGGED',
+          description: 'Logged daily standup attendance',
+          points: 10,
+          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
+          icon: '📝'
+        },
+        {
+          id: '4',
+          type: 'RANK_PROMOTION',
+          description: 'Promoted to Commander',
+          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
+          icon: '🏆'
+        }
+      ];
+
+      this.recentActivity.set(mockActivity);
+    }
   }
 
   private async loadActiveMissions(): Promise<void> {
-    // Mock data - replace with API call
-    const mockMissions: MissionPreview[] = [
-      {
-        id: '1',
-        title: 'Security Protocol Review',
-        description: 'Review and update security protocols for Deck 7',
-        progress: 75,
-        totalSteps: 4,
-        completedSteps: 3,
-        pointsReward: 200,
-        deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        difficulty: 'MEDIUM'
-      },
-      {
-        id: '2',
-        title: 'Engineering Efficiency Analysis',
-        description: 'Analyze warp core efficiency metrics',
-        progress: 30,
-        totalSteps: 5,
-        completedSteps: 1,
-        pointsReward: 300,
-        difficulty: 'HARD'
-      },
-      {
-        id: '3',
-        title: 'Team Coordination Exercise',
-        description: 'Coordinate bridge crew training simulation',
-        progress: 90,
-        totalSteps: 3,
-        completedSteps: 2,
-        pointsReward: 150,
-        deadline: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-        difficulty: 'EASY'
+    if (!environment.mockData.enabled) {
+      try {
+        // Try to load real data from API
+        const response = await fetch(`${environment.apiUrl}/missions/progress`);
+        if (response.ok) {
+          const missions = await response.json();
+          this.activeMissions.set(missions);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to load active missions:', error);
+        if (!environment.mockData.fallbackOnError) {
+          this.activeMissions.set([]);
+          return;
+        }
       }
-    ];
+    }
 
-    this.activeMissions.set(mockMissions);
+    // Mock data - only used if mock data is enabled or as fallback on error
+    if (environment.mockData.enabled || environment.mockData.fallbackOnError) {
+      const mockMissions: MissionPreview[] = [
+        {
+          id: '1',
+          title: 'Security Protocol Review',
+          description: 'Review and update security protocols for Deck 7',
+          progress: 75,
+          totalSteps: 4,
+          completedSteps: 3,
+          pointsReward: 200,
+          deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+          difficulty: 'MEDIUM'
+        },
+        {
+          id: '2',
+          title: 'Engineering Efficiency Analysis',
+          description: 'Analyze warp core efficiency metrics',
+          progress: 30,
+          totalSteps: 5,
+          completedSteps: 1,
+          pointsReward: 300,
+          difficulty: 'HARD'
+        },
+        {
+          id: '3',
+          title: 'Team Coordination Exercise',
+          description: 'Coordinate bridge crew training simulation',
+          progress: 90,
+          totalSteps: 3,
+          completedSteps: 2,
+          pointsReward: 150,
+          deadline: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+          difficulty: 'EASY'
+        }
+      ];
+
+      this.activeMissions.set(mockMissions);
+    }
   }
 
   private async loadLeaderboardPreview(): Promise<void> {
-    // Mock data - replace with API call
-    const mockLeaderboard = [
-      { rank: 1, name: 'Captain Picard', points: 4250, change: 0 },
-      { rank: 2, name: 'Lt. Commander Data', points: 3890, change: 1 },
-      { rank: 3, name: 'Commander Riker', points: 3654, change: -1 },
-      { rank: 4, name: 'Lt. Worf', points: 3420, change: 2 },
-      { rank: 5, name: 'Lt. Commander Geordi', points: 3180, change: 0 }
-    ];
+    if (!environment.mockData.enabled) {
+      try {
+        // Try to load real data from API
+        const response = await fetch(`${environment.apiUrl}/leaderboards/rankings?limit=5`);
+        if (response.ok) {
+          const leaderboard = await response.json();
+          this.topLeaderboard.set(leaderboard);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to load leaderboard preview:', error);
+        if (!environment.mockData.fallbackOnError) {
+          this.topLeaderboard.set([]);
+          return;
+        }
+      }
+    }
 
-    this.topLeaderboard.set(mockLeaderboard);
+    // Mock data - only used if mock data is enabled or as fallback on error
+    if (environment.mockData.enabled || environment.mockData.fallbackOnError) {
+      const mockLeaderboard = [
+        { rank: 1, name: 'Captain Picard', points: 4250, change: 0 },
+        { rank: 2, name: 'Lt. Commander Data', points: 3890, change: 1 },
+        { rank: 3, name: 'Commander Riker', points: 3654, change: -1 },
+        { rank: 4, name: 'Lt. Worf', points: 3420, change: 2 },
+        { rank: 5, name: 'Lt. Commander Geordi', points: 3180, change: 0 }
+      ];
+
+      this.topLeaderboard.set(mockLeaderboard);
+    }
   }
 
   // Event Handlers

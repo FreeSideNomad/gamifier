@@ -112,12 +112,7 @@ export class OrganizationComponent implements OnInit {
   private initializeForms(): void {
     this.organizationForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
-      description: ['', [Validators.required]],
-      domain: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]],
-      pointsPerAction: [10, [Validators.required, Validators.min(1)]],
-      requireApproval: [true],
-      allowSelfReporting: [true],
-      notificationEmails: this.formBuilder.array([])
+      description: ['', [Validators.required]]
     });
 
     this.actionForm = this.formBuilder.group({
@@ -154,9 +149,14 @@ export class OrganizationComponent implements OnInit {
     this.isLoading.set(true);
     try {
       // Load organization data
-      const orgData = await this.loadMockOrganization();
-      this.organization.set(orgData);
-      this.updateOrganizationForm(orgData);
+      const orgData = await this.loadOrganization();
+      if (orgData) {
+        this.organization.set(orgData);
+        this.updateOrganizationForm(orgData);
+      } else {
+        // No organization exists yet - this is fine for new setups
+        console.log('No organization found - ready to create new organization');
+      }
 
       // Load configuration data
       await Promise.all([
@@ -171,108 +171,97 @@ export class OrganizationComponent implements OnInit {
     }
   }
 
-  private async loadMockOrganization(): Promise<Organization> {
-    // Mock organization data
-    return {
-      id: '1',
-      name: 'Starfleet Command',
-      description: 'United Federation of Planets Starfleet Operations',
-      domain: 'starfleet.fed',
-      settings: {
-        pointsPerAction: 10,
-        requireApproval: true,
-        allowSelfReporting: true,
-        notificationEmails: ['admin@starfleet.fed', 'command@starfleet.fed']
+  private async loadOrganization(): Promise<Organization | null> {
+    try {
+      const response = await fetch('http://localhost:9080/api/organization');
+      if (response.ok) {
+        const organizations = await response.json();
+        if (organizations.length > 0) {
+          return organizations[0]; // Get the first organization
+        } else {
+          console.log('No organizations found');
+          return null;
+        }
+      } else {
+        console.error('Failed to load organization:', response.status);
+        return null;
       }
-    };
+    } catch (error) {
+      console.error('Failed to load organization:', error);
+      return null;
+    }
   }
 
   private async loadActionTypes(): Promise<void> {
-    // Mock action types data
-    const mockData: ActionType[] = [
-      {
-        id: '1',
-        name: 'Code Review',
-        description: 'Perform thorough code review',
-        points: 15,
-        category: 'Development',
-        requiresApproval: false,
-        isActive: true
-      },
-      {
-        id: '2',
-        name: 'Team Leadership',
-        description: 'Lead team meeting or initiative',
-        points: 25,
-        category: 'Leadership',
-        requiresApproval: true,
-        isActive: true
+    try {
+      // Need to get organization first to get action types
+      const orgs = await fetch('http://localhost:9080/api/organization');
+      if (orgs.ok) {
+        const orgList = await orgs.json();
+        if (orgList.length > 0) {
+          const orgId = orgList[0].id;
+          const response = await fetch(`http://localhost:9080/api/organization/${orgId}/action-types`);
+      if (response.ok) {
+        const data = await response.json();
+        this.actionTypes.set(data);
+      } else {
+        console.error('Failed to load action types:', response.status);
+        this.actionTypes.set([]);
       }
-    ];
-    this.actionTypes.set(mockData);
+    } catch (error) {
+      console.error('Failed to load action types:', error);
+      this.actionTypes.set([]);
+    }
   }
 
   private async loadMissionTypes(): Promise<void> {
-    // Mock mission types data
-    const mockData: MissionType[] = [
-      {
-        id: '1',
-        name: 'Developer Excellence',
-        description: 'Complete development-focused activities',
-        requirements: [
-          { actionTypeId: '1', requiredCount: 5, description: 'Complete 5 code reviews' }
-        ],
-        rewardPoints: 100,
-        badgeIcon: 'code',
-        difficulty: 'MEDIUM',
-        isActive: true
+    try {
+      // Need to get organization first to get mission types
+      const orgs = await fetch('http://localhost:9080/api/organization');
+      if (orgs.ok) {
+        const orgList = await orgs.json();
+        if (orgList.length > 0) {
+          const orgId = orgList[0].id;
+          const response = await fetch(`http://localhost:9080/api/organization/${orgId}/mission-types`);
+      if (response.ok) {
+        const data = await response.json();
+        this.missionTypes.set(data);
+      } else {
+        console.error('Failed to load mission types:', response.status);
+        this.missionTypes.set([]);
       }
-    ];
-    this.missionTypes.set(mockData);
+    } catch (error) {
+      console.error('Failed to load mission types:', error);
+      this.missionTypes.set([]);
+    }
   }
 
   private async loadRanks(): Promise<void> {
-    // Mock rank data
-    const mockData: Rank[] = [
-      {
-        id: '1',
-        name: 'Ensign',
-        minPoints: 0,
-        maxPoints: 999,
-        insignia: '●',
-        color: '#FF9900',
-        benefits: ['Access to basic systems'],
-        order: 1
-      },
-      {
-        id: '2',
-        name: 'Lieutenant',
-        minPoints: 1000,
-        maxPoints: 2999,
-        insignia: '●●',
-        color: '#FFCC00',
-        benefits: ['Access to intermediate systems', 'Team leadership'],
-        order: 2
+    try {
+      // Need to get organization first to get ranks
+      const orgs = await fetch('http://localhost:9080/api/organization');
+      if (orgs.ok) {
+        const orgList = await orgs.json();
+        if (orgList.length > 0) {
+          const orgId = orgList[0].id;
+          const response = await fetch(`http://localhost:9080/api/organization/${orgId}/ranks`);
+      if (response.ok) {
+        const data = await response.json();
+        this.ranks.set(data);
+      } else {
+        console.error('Failed to load ranks:', response.status);
+        this.ranks.set([]);
       }
-    ];
-    this.ranks.set(mockData);
+    } catch (error) {
+      console.error('Failed to load ranks:', error);
+      this.ranks.set([]);
+    }
   }
 
   private updateOrganizationForm(org: Organization): void {
     this.organizationForm.patchValue({
       name: org.name,
-      description: org.description,
-      domain: org.domain,
-      pointsPerAction: org.settings.pointsPerAction,
-      requireApproval: org.settings.requireApproval,
-      allowSelfReporting: org.settings.allowSelfReporting
-    });
-
-    // Update email array
-    const emailArray = this.organizationForm.get('notificationEmails') as FormArray;
-    emailArray.clear();
-    org.settings.notificationEmails.forEach(email => {
-      emailArray.push(this.formBuilder.control(email, [Validators.email]));
+      description: org.description || ''
     });
   }
 
@@ -288,15 +277,56 @@ export class OrganizationComponent implements OnInit {
       this.isLoading.set(true);
       try {
         const formData = this.organizationForm.value;
-        console.log('Saving organization:', formData);
-        // In real app: await this.apiService.updateOrganization(formData);
-        this.playSuccessSound();
+
+        // Auto-generate federationId from organization name
+        const federationId = this.generateFederationId(formData.name);
+
+        const organizationData = {
+          name: formData.name,
+          federationId: federationId,
+          description: formData.description || ''
+        };
+
+        const response = await fetch('http://localhost:9080/api/organization', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(organizationData)
+        });
+
+        if (response.ok) {
+          const newOrg = await response.json();
+          this.organization.set(newOrg);
+          this.updateOrganizationForm(newOrg);
+          this.playSuccessSound();
+          console.log('Organization created successfully:', newOrg);
+        } else {
+          const errorText = await response.text();
+          throw new Error(`Failed to create organization: ${response.status} - ${errorText}`);
+        }
       } catch (error) {
         console.error('Failed to save organization:', error);
+        alert(`Error creating organization: ${error.message}`);
       } finally {
         this.isLoading.set(false);
       }
+    } else {
+      alert('Please fill in all required fields correctly.');
     }
+  }
+
+  private generateFederationId(name: string): string {
+    // Convert name to uppercase, replace spaces/special chars with dashes, take first 8 chars
+    const baseId = name.toUpperCase()
+      .replace(/[^A-Z0-9]/g, '-')
+      .replace(/--+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .substring(0, 8);
+
+    // Add timestamp to ensure uniqueness
+    const timestamp = Date.now().toString().slice(-3);
+    return `${baseId}-${timestamp}`;
   }
 
   // Action type management
