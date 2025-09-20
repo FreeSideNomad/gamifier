@@ -1,5 +1,10 @@
 name: Starfleet Gamifier CI
 
+permissions:
+  checks: write
+  pull-requests: write
+  contents: read
+
 on:
   push:
     branches: [ main, develop, 'feature/**' ]
@@ -37,6 +42,17 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
+
+      - name: Wait for MongoDB
+        run: |
+          for i in {1..30}; do
+            if mongosh --eval 'db.runCommand("ping").ok' --quiet; then
+              echo "MongoDB is up!"
+              break
+            fi
+            echo "Waiting for MongoDB..."
+            sleep 2
+          done
 
       - name: Run tests
         run: mvn clean test
