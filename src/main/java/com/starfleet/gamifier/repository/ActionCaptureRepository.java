@@ -20,6 +20,8 @@ public interface ActionCaptureRepository extends MongoRepository<Action, String>
     // Core finder methods with updated field names
     Page<Action> findByUserIdOrderByActionDateDesc(String userId, Pageable pageable);
 
+    Page<Action> findByOrganizationIdOrderByActionDateDesc(String organizationId, Pageable pageable);
+
     Page<Action> findByStatusAndOrganizationId(CaptureStatus status, String organizationId, Pageable pageable);
 
     Page<Action> findByStatusAndUserIdIn(CaptureStatus status, List<String> userIds, Pageable pageable);

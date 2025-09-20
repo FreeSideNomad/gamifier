@@ -66,11 +66,20 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<Page<User>> getAllUsers(
-            @RequestParam String organizationId,
+            @RequestParam(required = false) String organizationId,
             Pageable pageable) {
-        authenticationService.requireAdminAccess(organizationId);
-        Page<User> users = userService.getAllUsers(organizationId, pageable);
+        // If no organizationId provided, use current user's organization
+        String orgId = organizationId != null ? organizationId : authenticationService.getCurrentOrganizationId();
+        authenticationService.requireAdminAccess(orgId);
+        Page<User> users = userService.getAllUsers(orgId, pageable);
         return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/current")
+    public ResponseEntity<UserDashboardResponse> getCurrentUser() {
+        String currentUserId = authenticationService.getCurrentUserId();
+        UserDashboardResponse dashboard = userService.getUserDashboard(currentUserId);
+        return ResponseEntity.ok(dashboard);
     }
 
     @PostMapping

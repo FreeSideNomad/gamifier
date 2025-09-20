@@ -5,6 +5,7 @@ import com.starfleet.gamifier.controller.dto.ActionRequests.ImportResult;
 import com.starfleet.gamifier.controller.dto.ActionRequests.RejectActionRequest;
 import com.starfleet.gamifier.domain.Action;
 import com.starfleet.gamifier.service.ActionService;
+import com.starfleet.gamifier.service.AuthenticationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,6 +25,18 @@ import org.springframework.web.multipart.MultipartFile;
 public class ActionController {
 
     private final ActionService actionService;
+    private final AuthenticationService authenticationService;
+
+    @GetMapping
+    public ResponseEntity<Page<Action>> getAllActions(
+            @RequestParam(required = false) String organizationId,
+            Pageable pageable) {
+        // If no organizationId provided, use current user's organization
+        String orgId = organizationId != null ? organizationId : authenticationService.getCurrentOrganizationId();
+        authenticationService.requireAdminAccess(orgId);
+        Page<Action> actions = actionService.getOrganizationActions(orgId, pageable);
+        return ResponseEntity.ok(actions);
+    }
 
     @PostMapping
     public ResponseEntity<Action> captureAction(@Valid @RequestBody CaptureActionRequest request) {
